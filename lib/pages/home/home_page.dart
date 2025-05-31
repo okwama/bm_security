@@ -1,13 +1,19 @@
+import 'package:bm_security/pages/maps/maps.dart';
+import 'package:bm_security/pages/my_team/my_team.dart';
+import 'package:bm_security/pages/profile/profile.dart';
+import 'package:bm_security/pages/requestflow/completed.dart';
+import 'package:bm_security/pages/requestflow/inProgress.dart';
+import 'package:bm_security/pages/requestflow/pending.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:securexresidence/models/visitor_model.dart';
-import 'package:securexresidence/pages/Leave/leaveapplication_page.dart';
-import 'package:securexresidence/pages/client/viewclient_page.dart';
-import 'package:securexresidence/pages/login/login_page.dart';
-import 'package:securexresidence/pages/order/vieworder_page.dart';
-import 'package:securexresidence/pages/visitor/visitor_page.dart';
-import 'package:securexresidence/services/api_service.dart';
-import 'package:securexresidence/services/visitor_service.dart';
+import 'package:bm_security/models/visitor_model.dart';
+import 'package:bm_security/pages/Leave/leaveapplication_page.dart';
+import 'package:bm_security/pages/client/viewclient_page.dart';
+import 'package:bm_security/pages/login/login_page.dart';
+import 'package:bm_security/pages/order/vieworder_page.dart';
+import 'package:bm_security/pages/visitor/visitor_page.dart';
+import 'package:bm_security/services/api_service.dart';
+import 'package:bm_security/services/visitor_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../components/menu_tile.dart';
 import '../order/addorder_page.dart';
@@ -25,7 +31,10 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late String userName;
   late String userPhone;
-  int _pendingJourneyPlans = 0;
+  final int _pendingJourneyPlans = 0;
+  final int _pendingCashRequests = 0;
+  final int _inProgressCashRequests = 0;
+  final int _completedCashRequests = 0;
   int _pendingVisitorRequests = 0;
   bool _isLoading = true;
 
@@ -34,6 +43,7 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _loadUserData();
     // _loadPendingJourneyPlans();
+    // _loadPendingCashRequests();
     _loadPendingVisitorRequests();
   }
 
@@ -207,7 +217,8 @@ class _HomePageState extends State<HomePage> {
               final contact = emergencyContacts[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  backgroundColor:
+                      Theme.of(context).primaryColor.withOpacity(0.1),
                   child: Icon(
                     index == 3 ? Icons.emergency : Icons.person,
                     color: Theme.of(context).primaryColor,
@@ -244,7 +255,10 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Securex Client'),
+        title: const Text(
+          'Dashboard',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: Theme.of(context).primaryColor,
         foregroundColor: Colors.white,
         actions: [
@@ -297,11 +311,54 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     // User Profile Tile
                     MenuTile(
-                      title: 'Resident',
+                      title: 'Driver',
                       subtitle: '$userName\n$userPhone',
                       icon: Icons.person,
                       onTap: () {
                         // TODO: Navigate to profile page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ProfilePage()),
+                        );
+                      },
+                    ),
+                    MenuTile(
+                      title: 'PENDING',
+                      icon: Icons.pending_outlined,
+                      badgeCount: _isLoading ? null : _pendingCashRequests,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const PendingPage()),
+                        );
+                      },
+                    ),
+
+                    MenuTile(
+                      title: 'IN PROGRESS',
+                      icon: Icons.watch_later_outlined,
+                      badgeCount: _isLoading ? null : _inProgressCashRequests,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const InProgressPage()),
+                        );
+                      },
+                    ),
+
+                    MenuTile(
+                      title: 'COMPLETED',
+                      icon: Icons.done_all_outlined,
+                      badgeCount: _isLoading ? null : _completedCashRequests,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const CompletedPage()),
+                        );
                       },
                     ),
 
@@ -317,6 +374,17 @@ class _HomePageState extends State<HomePage> {
                       },
                     ),
                     MenuTile(
+                      title: 'My Team',
+                      icon: Icons.group,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const MyTeamPage()),
+                        );
+                      },
+                    ),
+                                        MenuTile(
                       title: 'Notice Board',
                       icon: Icons.notifications,
                       onTap: () {
@@ -324,6 +392,17 @@ class _HomePageState extends State<HomePage> {
                           context,
                           MaterialPageRoute(
                               builder: (context) => const NoticeBoardPage()),
+                        );
+                      },
+                    ),
+                    MenuTile(
+                      title: 'Maps',
+                      icon: Icons.map,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MapPage()),
                         );
                       },
                     ),
@@ -470,7 +549,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
-            ),// Watermark
+            ), // Watermark
           ],
         ),
       ),

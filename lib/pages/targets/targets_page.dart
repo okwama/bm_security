@@ -1,9 +1,9 @@
 // Add/Edit Order Page
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:securexresidence/models/target_model.dart';
-import 'package:securexresidence/services/api_service.dart';
-import 'package:securexresidence/pages/targets/add_edit_target_page.dart';
+import 'package:bm_security/models/target_model.dart';
+import 'package:bm_security/services/api_service.dart';
+import 'package:bm_security/pages/targets/add_edit_target_page.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
 
@@ -131,9 +131,9 @@ class _TargetsPageState extends State<TargetsPage>
         bottom: TabBar(
           controller: _tabController,
           tabs: [
-            Tab(text: 'Active (${_activeCount})'),
-            Tab(text: 'Upcoming (${_upcomingCount})'),
-            Tab(text: 'Completed (${_completedCount})'),
+            Tab(text: 'Active ($_activeCount)'),
+            Tab(text: 'Upcoming ($_upcomingCount)'),
+            Tab(text: 'Completed ($_completedCount)'),
           ],
         ),
       ),

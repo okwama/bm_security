@@ -3,18 +3,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import 'package:get/get.dart';
-import 'package:securexresidence/models/journeyplan_model.dart';
-import 'package:securexresidence/models/noticeboard_model.dart';
-import 'package:securexresidence/models/outlet_model.dart';
-import 'package:securexresidence/models/product_model.dart';
-import 'package:securexresidence/models/report/report_model.dart';
-import 'package:securexresidence/models/sos_model.dart';
-import 'package:securexresidence/utils/auth_config.dart';
-import 'package:securexresidence/models/order_model.dart';
-import 'package:securexresidence/models/target_model.dart';
-import 'package:securexresidence/models/leave_model.dart';
-import 'package:securexresidence/controllers/auth_controller.dart';
-import 'package:securexresidence/models/visitor_model.dart';
+import 'package:bm_security/models/journeyplan_model.dart';
+import 'package:bm_security/models/noticeboard_model.dart';
+import 'package:bm_security/models/outlet_model.dart';
+import 'package:bm_security/models/product_model.dart';
+import 'package:bm_security/models/report/report_model.dart';
+import 'package:bm_security/models/sos_model.dart';
+import 'package:bm_security/utils/auth_config.dart';
+import 'package:bm_security/models/order_model.dart';
+import 'package:bm_security/models/target_model.dart';
+import 'package:bm_security/models/leave_model.dart';
+import 'package:bm_security/controllers/auth_controller.dart';
+import 'package:bm_security/models/visitor_model.dart';
 
 class PaginatedResponse<T> {
   final List<T> data;
@@ -479,14 +479,14 @@ class ApiService {
         box.write('token', data['token']);
         box.write('user', data['user']);
         
-        // Check if the user has the RESIDENT role
-        final user = data['user'];
-        if (user != null && user['role'] != 'USER' && user['role'] != 'RESIDENT') {
-          return {
-            'success': false,
-            'message': 'Access denied. This app is for residents only.'
-          };
-        }
+        // // Check if the user has the RESIDENT role
+        // final user = data['user'];
+        // if (user != null && user['role'] != 'USER' && user['role'] != 'RESIDENT') {
+        //   return {
+        //     'success': false,
+        //     'message': 'Access denied. This app is for residents only.'
+        //   };
+        // }
         
         return {'success': true, 'token': data['token'], 'user': data['user']};
       } else {
@@ -573,8 +573,9 @@ class ApiService {
 
       // Build query parameters
       final queryParams = <String, String>{};
-      if (journeyPlanId != null)
+      if (journeyPlanId != null) {
         queryParams['journeyPlanId'] = journeyPlanId.toString();
+      }
       if (outletId != null) queryParams['outletId'] = outletId.toString();
       if (userId != null) queryParams['userId'] = userId.toString();
 

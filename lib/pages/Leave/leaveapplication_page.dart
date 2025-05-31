@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
-import 'package:securexresidence/services/api_service.dart';
-import 'package:securexresidence/pages/Leave/leave_requests_page.dart';import 'dart:io';
+import 'package:bm_security/services/api_service.dart';
+import 'package:bm_security/pages/Leave/leave_requests_page.dart';import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class LeaveApplicationPage extends StatefulWidget {
-  const LeaveApplicationPage({Key? key}) : super(key: key);
+  const LeaveApplicationPage({super.key});
 
   @override
   _LeaveApplicationPageState createState() => _LeaveApplicationPageState();
@@ -22,7 +22,7 @@ class _LeaveApplicationPageState extends State<LeaveApplicationPage> {
   File? _attachedFile;
   bool _isLoading = false;
   String? _error;
-  bool _isFileUploadSupported = !kIsWeb; // File upload not supported on web
+  final bool _isFileUploadSupported = !kIsWeb; // File upload not supported on web
 
   final List<String> _leaveTypes = [
     'Sick Leave',

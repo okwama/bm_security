@@ -1,8 +1,10 @@
 // Activation Page
 import 'package:flutter/material.dart';
-import 'package:securexresidence/pages/login/login_page.dart';
+import 'package:bm_security/pages/login/login_page.dart';
 
 class ActivationPage extends StatelessWidget {
+  const ActivationPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

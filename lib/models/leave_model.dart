@@ -1,4 +1,4 @@
-import 'package:securexresidence/models/user_model.dart';
+import 'package:bm_security/models/user_model.dart';
 
 enum LeaveStatus { PENDING, APPROVED, REJECTED }
 

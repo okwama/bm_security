@@ -1,7 +1,7 @@
+// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:securexresidence/controllers/auth_controller.dart';
-
+import 'package:bm_security/controllers/auth_controller.dart';
 
 class NoConnectionPage extends StatelessWidget {
   final VoidCallback? onRetry;
@@ -15,46 +15,45 @@ class NoConnectionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Error Icon
+                // Icon
                 Icon(
                   Icons.signal_wifi_off_rounded,
-                  size: 80,
-                  color: Theme.of(context).colorScheme.error,
+                  size: 64,
+                  color: theme.colorScheme.error,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
 
-                // Error Title
+                // Title
                 Text(
-                  'No Internet Connection',
-                  style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                        fontWeight: FontWeight.bold,
-                      ),
+                  'No Internet',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: theme.colorScheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
 
-                // Error Message
+                // Message
                 Text(
-                  message ??
-                      'Please check your internet connection and try again.',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context)
-                            .colorScheme
-                            .onBackground
-                            .withOpacity(0.7),
-                      ),
+                  message ?? 'Please check your connection and try again.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                  ),
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 32),
+                const SizedBox(height: 28),
 
                 // Retry Button
                 ElevatedButton.icon(
@@ -62,7 +61,6 @@ class NoConnectionPage extends StatelessWidget {
                     if (onRetry != null) {
                       onRetry!();
                     } else {
-                      // Default retry action
                       final authController = Get.find<AuthController>();
                       if (authController.isLoggedIn.value) {
                         Get.offAllNamed('/home');
@@ -72,10 +70,14 @@ class NoConnectionPage extends StatelessWidget {
                     }
                   },
                   icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('Try Again'),
+                  label: const Text('Retry'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    backgroundColor: theme.colorScheme.primary,
+                    foregroundColor: theme.colorScheme.onPrimary,
                   ),
                 ),
               ],

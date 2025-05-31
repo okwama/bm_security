@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:securexresidence/models/leave_model.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/leave_model.dart';
+import 'package:bm_security/services/api_service.dart';
 import 'package:intl/intl.dart';
 class LeaveRequestsPage extends StatefulWidget {
-  const LeaveRequestsPage({Key? key}) : super(key: key);
+  const LeaveRequestsPage({super.key});
 
   @override
   _LeaveRequestsPageState createState() => _LeaveRequestsPageState();

@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:securexresidence/models/visitor_model.dart';
-import 'package:securexresidence/services/api_service.dart';
-import 'package:securexresidence/services/visitor_service.dart';
-import 'package:securexresidence/utils/date_formatter.dart';
-import 'package:securexresidence/widgets/loading_indicator.dart';
-import 'package:securexresidence/widgets/error_dialog.dart';
+import 'package:bm_security/models/visitor_model.dart';
+import 'package:bm_security/services/api_service.dart';
+import 'package:bm_security/services/visitor_service.dart';
+import 'package:bm_security/utils/date_formatter.dart';
+import 'package:bm_security/widgets/loading_indicator.dart';
+import 'package:bm_security/widgets/error_dialog.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:securexresidence/pages/visitor/visitor_requests_page.dart';
-import 'package:securexresidence/widgets/error_view.dart';
-import 'package:securexresidence/widgets/success_view.dart';
+import 'package:bm_security/pages/visitor/visitor_requests_page.dart';
+import 'package:bm_security/widgets/error_view.dart';
+import 'package:bm_security/widgets/success_view.dart';
 import 'dart:io';
 
 class VisitorPage extends StatefulWidget {
-  const VisitorPage({Key? key}) : super(key: key);
+  const VisitorPage({super.key});
 
   @override
   _VisitorPageState createState() => _VisitorPageState();

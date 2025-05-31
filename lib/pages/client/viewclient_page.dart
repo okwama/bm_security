@@ -1,17 +1,17 @@
 // View Client Page
 import 'package:flutter/material.dart';
-import 'package:securexresidence/models/outlet_model.dart';
-import 'package:securexresidence/pages/order/addorder_page.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/outlet_model.dart';
+import 'package:bm_security/pages/order/addorder_page.dart';
+import 'package:bm_security/services/api_service.dart';
 
 
 class ViewClientPage extends StatefulWidget {
   final bool forOrderCreation;
 
   const ViewClientPage({
-    Key? key,
+    super.key,
     this.forOrderCreation = false,
-  }) : super(key: key);
+  });
 
   @override
   State<ViewClientPage> createState() => _ViewClientPageState();

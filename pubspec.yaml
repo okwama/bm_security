@@ -1,4 +1,4 @@
-name: securexresidence
+name: bm_security
 description: "A new Flutter project."
 
 version: 1.0.0+1
@@ -28,6 +28,8 @@ dependencies:
   percent_indicator: ^4.2.3
   file_picker: ^9.2.1
   url_launcher: ^6.2.5
+  flutter_native_splash: ^2.4.6
+  google_maps_flutter: ^2.12.2
 
 dev_dependencies:
   flutter_test:
@@ -38,11 +40,19 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/images/images.png"
+  image_path: "assets/bm.png"
   remove_alpha_ios: true 
   # Optional for Android adaptive icons:
   # adaptive_icon_background: "#FFFFFF"
   # adaptive_icon_foreground: "lib/assets/images/icon_foreground.png"
+
+flutter_native_splash:
+  color: "#ffffff"
+  image: assets/bm.png
+  android: true
+  ios: true
+  android_gravity: center
+  ios_content_mode: center
 
 flutter:
   uses-material-design: true

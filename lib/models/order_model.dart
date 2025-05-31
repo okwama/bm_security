@@ -1,5 +1,5 @@
-import 'package:securexresidence/models/product_model.dart';
-import 'package:securexresidence/models/outlet_model.dart';
+import 'package:bm_security/models/product_model.dart';
+import 'package:bm_security/models/outlet_model.dart';
 
 class Order {
   final int id;

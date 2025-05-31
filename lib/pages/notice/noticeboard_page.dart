@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:securexresidence/services/api_service.dart';
-import 'package:securexresidence/models/noticeboard_model.dart';
+import 'package:bm_security/services/api_service.dart';
+import 'package:bm_security/models/noticeboard_model.dart';
 import 'package:intl/intl.dart'; // Import for date formatting
 
 class NoticeBoardPage extends StatefulWidget {

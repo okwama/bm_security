@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:securexresidence/models/target_model.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/target_model.dart';
+import 'package:bm_security/services/api_service.dart';
 import 'package:get_storage/get_storage.dart';
 
 class AddEditTargetPage extends StatefulWidget {

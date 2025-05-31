@@ -8,13 +8,13 @@ class SuccessView extends StatelessWidget {
   final IconData? icon;
 
   const SuccessView({
-    Key? key,
+    super.key,
     required this.title,
     required this.message,
     this.onAction,
     this.actionLabel,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

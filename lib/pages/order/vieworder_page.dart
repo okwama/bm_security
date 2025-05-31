@@ -1,12 +1,12 @@
 // View Order Page
 import 'package:flutter/material.dart';
-import 'package:securexresidence/models/order_model.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/order_model.dart';
+import 'package:bm_security/services/api_service.dart';
 import 'package:intl/intl.dart';
-import 'package:securexresidence/pages/order/addorder_page.dart';
+import 'package:bm_security/pages/order/addorder_page.dart';
 
 class ViewOrdersPage extends StatefulWidget {
-  const ViewOrdersPage({Key? key}) : super(key: key);
+  const ViewOrdersPage({super.key});
 
   @override
   _ViewOrdersPageState createState() => _ViewOrdersPageState();

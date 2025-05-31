@@ -1,5 +1,5 @@
-import 'package:securexresidence/models/product_model.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/product_model.dart';
+import 'package:bm_security/services/api_service.dart';
 
 class ProductService {
   Future<List<Product>> getProducts() async {

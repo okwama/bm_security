@@ -1,6 +1,6 @@
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/services/api_service.dart';
 
 class AuthController extends GetxController {
   final box = GetStorage();

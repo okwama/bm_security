@@ -7,10 +7,10 @@ class EmergencyDetailsPage extends StatefulWidget {
   final String? currentAddress;
 
   const EmergencyDetailsPage({
-    Key? key,
+    super.key,
     this.currentPosition,
     this.currentAddress,
-  }) : super(key: key);
+  });
 
   @override
   State<EmergencyDetailsPage> createState() => _EmergencyDetailsPageState();

@@ -7,12 +7,12 @@ class ErrorView extends StatelessWidget {
   final IconData? icon;
 
   const ErrorView({
-    Key? key,
+    super.key,
     required this.title,
     required this.message,
     this.onRetry,
     this.icon,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

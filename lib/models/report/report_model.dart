@@ -1,6 +1,6 @@
-import 'package:securexresidence/models/report/productReport_model.dart';
-import 'package:securexresidence/models/report/visibilityReport_model.dart';
-import 'package:securexresidence/models/report/feedbackReport_model.dart';
+import 'package:bm_security/models/report/productReport_model.dart';
+import 'package:bm_security/models/report/visibilityReport_model.dart';
+import 'package:bm_security/models/report/feedbackReport_model.dart';
 
 enum ReportType {
   PRODUCT_AVAILABILITY,

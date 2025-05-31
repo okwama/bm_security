@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:securexresidence/models/visitor_model.dart';
-import 'package:securexresidence/services/visitor_service.dart';
-import 'package:securexresidence/utils/date_formatter.dart';
-import 'package:securexresidence/widgets/loading_indicator.dart';
-import 'package:securexresidence/widgets/error_view.dart';
-import 'package:securexresidence/widgets/success_view.dart';
+import 'package:bm_security/models/visitor_model.dart';
+import 'package:bm_security/services/visitor_service.dart';
+import 'package:bm_security/utils/date_formatter.dart';
+import 'package:bm_security/widgets/loading_indicator.dart';
+import 'package:bm_security/widgets/error_view.dart';
+import 'package:bm_security/widgets/success_view.dart';
 
 class VisitorRequestsPage extends StatefulWidget {
-  const VisitorRequestsPage({Key? key}) : super(key: key);
+  const VisitorRequestsPage({super.key});
 
   @override
   _VisitorRequestsPageState createState() => _VisitorRequestsPageState();

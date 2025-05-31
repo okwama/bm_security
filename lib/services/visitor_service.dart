@@ -3,8 +3,8 @@ import 'dart:io';
 import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
-import 'package:securexresidence/models/visitor_model.dart';
-import 'package:securexresidence/utils/auth_config.dart';
+import 'package:bm_security/models/visitor_model.dart';
+import 'package:bm_security/utils/auth_config.dart';
 
 class VisitorService {
   static const String baseUrl = '${ApiConfig.baseUrl}/api';

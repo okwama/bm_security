@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/services/api_service.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:securexresidence/services/sos_service.dart';
+import 'package:bm_security/services/sos_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geocoding/geocoding.dart';
-import 'package:securexresidence/pages/sos/emergency_details_page.dart';
+import 'package:bm_security/pages/sos/emergency_details_page.dart';
 
 class SOSPage extends StatefulWidget {
-  const SOSPage({Key? key}) : super(key: key);
+  const SOSPage({super.key});
 
   @override
   State<SOSPage> createState() => _SOSPageState();

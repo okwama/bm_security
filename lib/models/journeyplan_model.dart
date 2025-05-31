@@ -1,4 +1,4 @@
-import 'package:securexresidence/models/outlet_model.dart';
+import 'package:bm_security/models/outlet_model.dart';
 import 'package:flutter/material.dart';
 
 class JourneyPlan {

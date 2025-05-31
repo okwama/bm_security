@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/services/api_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:securexresidence/controllers/auth_controller.dart';
+import 'package:bm_security/controllers/auth_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -86,13 +86,13 @@ class _LoginPageState extends State<LoginPage> {
                       height: 120,
                       width: 120,
                       margin: const EdgeInsets.only(bottom: 40),
-                      child: Image.asset('assets/images.png',
+                      child: Image.asset('assets/bm.png',
                           fit: BoxFit.contain)),
                 ),
 
                 // Welcome Text
                 const Text(
-                  'Residence',
+                  'BM Security',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

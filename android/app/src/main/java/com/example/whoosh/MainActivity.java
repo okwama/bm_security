@@ -1,4 +1,4 @@
-package com.example.whoosh;
+package com.bmsecurity.bm;
 
 import io.flutter.embedding.android.FlutterActivity;
 

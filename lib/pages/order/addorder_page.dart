@@ -1,9 +1,9 @@
 // Add/Edit Order Page
 import 'package:flutter/material.dart';
-import 'package:securexresidence/models/order_model.dart';
-import 'package:securexresidence/models/product_model.dart';
-import 'package:securexresidence/models/outlet_model.dart';
-import 'package:securexresidence/services/api_service.dart';
+import 'package:bm_security/models/order_model.dart';
+import 'package:bm_security/models/product_model.dart';
+import 'package:bm_security/models/outlet_model.dart';
+import 'package:bm_security/services/api_service.dart';
 
 class CartItem {
   final Product product;
@@ -19,10 +19,10 @@ class AddOrderPage extends StatefulWidget {
   final Order? order;
 
   const AddOrderPage({
-    Key? key,
+    super.key,
     required this.outlet,
     this.order,
-  }) : super(key: key);
+  });
 
   @override
   _AddOrderPageState createState() => _AddOrderPageState();

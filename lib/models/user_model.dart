@@ -1,7 +1,7 @@
 
-import 'package:securexresidence/models/journeyplan_model.dart';
-import 'package:securexresidence/models/order_model.dart';
-import 'package:securexresidence/models/token_model.dart';
+import 'package:bm_security/models/journeyplan_model.dart';
+import 'package:bm_security/models/order_model.dart';
+import 'package:bm_security/models/token_model.dart';
 
 class User {
   final int id;
