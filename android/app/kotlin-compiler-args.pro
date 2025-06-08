@@ -1,0 +1,2 @@
+-jvm-target 17
+-Xjvm-default=all

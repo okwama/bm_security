@@ -10,7 +10,7 @@ import 'package:bm_security/controllers/auth_controller.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 // Custom color scheme
-const Color primaryBlack = Color(0xFFE21923);
+const Color primaryBlack = Color.fromARGB(255, 34, 56, 150);
 const Color secondaryGrey = Color.fromARGB(255, 0, 0, 0);
 const Color accentGrey = Color.fromARGB(255, 43, 53, 60);
 const Color lightGrey = Color.fromARGB(255, 95, 59, 59);

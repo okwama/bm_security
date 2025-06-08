@@ -1,24 +1,16 @@
 import 'package:bm_security/pages/maps/maps.dart';
 import 'package:bm_security/pages/my_team/my_team.dart';
 import 'package:bm_security/pages/profile/profile.dart';
-import 'package:bm_security/pages/requestflow/completed.dart';
-import 'package:bm_security/pages/requestflow/inProgress.dart';
-import 'package:bm_security/pages/requestflow/pending.dart';
+import 'package:bm_security/pages/requisitions/completed/completed.dart';
+import 'package:bm_security/pages/requisitions/inProgress/inProgress.dart';
+import 'package:bm_security/pages/requisitions/pending/pending.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
-import 'package:bm_security/models/visitor_model.dart';
-import 'package:bm_security/pages/Leave/leaveapplication_page.dart';
-import 'package:bm_security/pages/client/viewclient_page.dart';
 import 'package:bm_security/pages/login/login_page.dart';
-import 'package:bm_security/pages/order/vieworder_page.dart';
-import 'package:bm_security/pages/visitor/visitor_page.dart';
 import 'package:bm_security/services/api_service.dart';
-import 'package:bm_security/services/visitor_service.dart';
+import 'package:bm_security/services/requisitions_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../components/menu_tile.dart';
-import '../order/addorder_page.dart';
-import '../notice/noticeboard_page.dart';
-import '../targets/targets_page.dart';
 import '../sos/sos_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -37,14 +29,15 @@ class _HomePageState extends State<HomePage> {
   final int _completedCashRequests = 0;
   int _pendingVisitorRequests = 0;
   bool _isLoading = true;
+  final RequisitionsService _requisitionsService = RequisitionsService();
+  int _pendingCount = 0;
+  int _inProgressCount = 0;
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
-    // _loadPendingJourneyPlans();
-    // _loadPendingCashRequests();
-    _loadPendingVisitorRequests();
+    _loadCounts();
   }
 
   void _loadUserData() {
@@ -62,30 +55,58 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _loadPendingVisitorRequests() async {
+  Future<void> _loadCounts() async {
+    if (!mounted) return;
+    
     try {
+      // Reset counts before loading
       setState(() {
-        _isLoading = true;
+        _pendingCount = 0;
+        _inProgressCount = 0;
       });
+      
+      // Load pending requests
+      List<dynamic> pendingRequests = [];
+      try {
+        pendingRequests = await _requisitionsService.getMyAssignedRequests();
+      } catch (error) {
+        print('Error loading pending requests: $error');
+      }
+          
+      // Load in-progress requests
+      List<dynamic> inProgressRequests = [];
+      try {
+        inProgressRequests = await _requisitionsService.getInProgressRequests();
+      } catch (error) {
+        print('Error loading in-progress requests: $error');
+      }
 
-      final visitorRequests = await VisitorService.getVisitorRequests();
-      print('Loaded ${visitorRequests.length} visitor requests');
-
-      final pendingRequests = visitorRequests
-          .where((visitor) => visitor.status == VisitorStatus.pending)
-          .toList();
-
-      print('Found ${pendingRequests.length} pending visitor requests');
-
-      setState(() {
-        _pendingVisitorRequests = pendingRequests.length;
-        _isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading pending visitor requests: $e');
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _pendingCount = pendingRequests.length;
+          _inProgressCount = inProgressRequests.length;
+          _isLoading = false;
+        });
+      }
+    } catch (e, stackTrace) {
+      print('Error in _loadCounts: $e');
+      print('Stack trace: $stackTrace');
+      
+      if (mounted) {
+        setState(() {
+          _pendingCount = 0;
+          _inProgressCount = 0;
+          _isLoading = false;
+        });
+        
+        // Show error to user
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to load request counts. Pull down to refresh.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -93,9 +114,9 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _isLoading = true;
     });
-    //await _loadPendingJourneyPlans();
-    await _loadPendingVisitorRequests();
+
     _loadUserData();
+    _loadCounts();
   }
 
   Future<void> _logout() async {
@@ -326,12 +347,13 @@ class _HomePageState extends State<HomePage> {
                     MenuTile(
                       title: 'PENDING',
                       icon: Icons.pending_outlined,
-                      badgeCount: _isLoading ? null : _pendingCashRequests,
+                      badgeCount: _isLoading ? null : _pendingCount,
                       onTap: () {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const PendingPage()),
+                              builder: (context) =>
+                                  const PendingRequisitionsPage()),
                         );
                       },
                     ),
@@ -339,7 +361,7 @@ class _HomePageState extends State<HomePage> {
                     MenuTile(
                       title: 'IN PROGRESS',
                       icon: Icons.watch_later_outlined,
-                      badgeCount: _isLoading ? null : _inProgressCashRequests,
+                      badgeCount: _isLoading ? null : _inProgressCount,
                       onTap: () {
                         Navigator.push(
                           context,
@@ -384,68 +406,18 @@ class _HomePageState extends State<HomePage> {
                         );
                       },
                     ),
-                                        MenuTile(
-                      title: 'Notice Board',
-                      icon: Icons.notifications,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const NoticeBoardPage()),
-                        );
-                      },
-                    ),
+
                     MenuTile(
                       title: 'Maps',
                       icon: Icons.map,
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(
-                              builder: (context) => MapPage()),
+                          MaterialPageRoute(builder: (context) => MapsPage()),
                         );
                       },
                     ),
 
-                    MenuTile(
-                      title: 'Visitor Requests',
-                      icon: Icons.people_alt,
-                      badgeCount: _isLoading ? null : _pendingVisitorRequests,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => const VisitorPage()),
-                        ).then((_) {
-                          // Refresh visitor request count when returning from Visitor page
-                          _loadPendingVisitorRequests();
-                          // Show a brief notification if there are pending requests
-                          if (_pendingVisitorRequests > 0) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                    'You have $_pendingVisitorRequests pending visitor requests'),
-                                duration: const Duration(seconds: 2),
-                                backgroundColor: Colors.blue,
-                                action: SnackBarAction(
-                                  label: 'VIEW',
-                                  textColor: Colors.white,
-                                  onPressed: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                          builder: (context) =>
-                                              const VisitorPage()),
-                                    ).then(
-                                        (_) => _loadPendingVisitorRequests());
-                                  },
-                                ),
-                              ),
-                            );
-                          }
-                        });
-                      },
-                    ),
                     MenuTile(
                       title: 'Call',
                       icon: Icons.call,

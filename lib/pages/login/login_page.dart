@@ -86,8 +86,7 @@ class _LoginPageState extends State<LoginPage> {
                       height: 120,
                       width: 120,
                       margin: const EdgeInsets.only(bottom: 40),
-                      child: Image.asset('assets/bm.png',
-                          fit: BoxFit.contain)),
+                      child: Image.asset('assets/bm.png', fit: BoxFit.contain)),
                 ),
 
                 // Welcome Text
@@ -156,11 +155,11 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildPhoneNumberField() {
     return TextFormField(
       controller: _phoneNumberController,
-      keyboardType: TextInputType.phone,
+      keyboardType: TextInputType.text,
       decoration: InputDecoration(
-        labelText: 'Phone Number',
-        hintText: 'Enter your phone number',
-        prefixIcon: const Icon(Icons.phone_outlined),
+        labelText: 'Employee No',
+        hintText: 'employee No',
+        prefixIcon: const Icon(Icons.badge_outlined),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
         ),
@@ -168,10 +167,7 @@ class _LoginPageState extends State<LoginPage> {
       ),
       validator: (value) {
         if (value == null || value.isEmpty) {
-          return 'Please enter your phone number';
-        }
-        if (!GetUtils.isPhoneNumber(value)) {
-          return 'Please enter a valid phone number';
+          return 'Please enter your employee number';
         }
         return null;
       },
