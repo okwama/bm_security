@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
 import 'package:bm_security/models/request.dart';
-import 'package:bm_security/services/requisitions_service.dart';
+import 'package:bm_security/services/requisitions/requisitions_service.dart';
 
 class CompletedPage extends StatefulWidget {
   const CompletedPage({super.key});
@@ -69,8 +69,20 @@ class _CompletedPageState extends State<CompletedPage> {
     try {
       setState(() => _isLoading = true);
       
-      // Complete the requisition (this will also stop location tracking)
-      await _requisitionsService.completeRequisition(request.id);
+      // Get current location if needed or use default values
+      // Note: You might want to implement proper location fetching logic here
+      final double? latitude = 0.0; // Replace with actual location logic
+      final double? longitude = 0.0; // Replace with actual location logic
+      
+      // Complete the requisition with all required parameters
+      await _requisitionsService.completeRequisition(
+        request.id.toString(),
+        photoUrl: '',
+        bankDetails: null, // Since bankDetails is not available in Request model
+        latitude: latitude,
+        longitude: longitude,
+        notes: 'Completed by user',
+      );
       
       if (mounted) {
         // Refresh the list

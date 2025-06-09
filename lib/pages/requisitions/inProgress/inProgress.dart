@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/request.dart';
-import '../../../services/requisitions_service.dart';
+import '../../../services/requisitions/requisitions_service.dart';
 import 'inTransitDetail.dart';
 
 class InProgressPage extends StatefulWidget {
   const InProgressPage({super.key});
-
-  static int getInProgressCount() {
-    return _InProgressPageState.inProgressCount;
-  }
-
+  static int getInProgressCount() => _InProgressPageState.inProgressCount;
   @override
   State<InProgressPage> createState() => _InProgressPageState();
 }
@@ -30,13 +26,8 @@ class _InProgressPageState extends State<InProgressPage> {
 
   Future<void> _fetchRequisitions() async {
     try {
-      setState(() {
-        _isLoading = true;
-        _error = null;
-      });
-
+      setState(() => _isLoading = true);
       final requests = await _requisitionsService.getInProgressRequests();
-
       setState(() {
         _requisitions = requests;
         inProgressCount = requests.length;
@@ -54,91 +45,101 @@ class _InProgressPageState extends State<InProgressPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("In-Transit"),
+        title: const Text("In-Transit", style: TextStyle(fontSize: 16)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _fetchRequisitions,
-          ),
-        ],
+        actions: [IconButton(icon: const Icon(Icons.refresh, size: 20), onPressed: _fetchRequisitions)],
       ),
       body: RefreshIndicator(
         onRefresh: _fetchRequisitions,
-        child: _buildBody(),
+        child: _isLoading 
+          ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+          : _error != null 
+            ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Text('Error: $_error', style: const TextStyle(color: Colors.red, fontSize: 12)),
+                const SizedBox(height: 8),
+                ElevatedButton(onPressed: _fetchRequisitions, child: const Text('Retry', style: TextStyle(fontSize: 12))),
+              ]))
+            : _requisitions.isEmpty 
+              ? const Center(child: Text('No in-transit requisitions', style: TextStyle(fontSize: 12)))
+              : ListView.builder(
+                  itemCount: _requisitions.length,
+                  itemBuilder: (context, index) => _buildRequisitionCard(_requisitions[index]),
+                ),
       ),
     );
   }
 
-  Widget _buildBody() {
-    if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (_error != null) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Error: $_error', style: const TextStyle(color: Colors.red)),
-            const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: _fetchRequisitions,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-
-    if (_requisitions.isEmpty) {
-      return const Center(child: Text('No in-transit requisitions found'));
-    }
-
-    return ListView.builder(
-      itemCount: _requisitions.length,
-      itemBuilder: (context, index) {
-        final req = _requisitions[index];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: ListTile(
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            leading: const Icon(Icons.local_shipping, color: Colors.blue),
-            title: Text(
-              req.serviceType,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text('Pickup: ${req.pickupLocation}',
-                    style: const TextStyle(fontSize: 13)),
-                Text('Delivery: ${req.deliveryLocation}',
-                    style: const TextStyle(fontSize: 13)),
-                Text(
-                  req.pickupDate != null ? DateFormat('MMM dd, yyyy hh:mm a').format(req.pickupDate!) : 'Not specified',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 12,
-                  ),
+  Widget _buildRequisitionCard(Request req) {
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      elevation: 1,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+      child: InkWell(
+        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => InTransitDetail(requisition: req))),
+        borderRadius: BorderRadius.circular(6),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Column(
+            children: [
+              // First row: Branch, Service Type, and Status
+              Row(children: [
+                _buildInfoColumn('BRANCH', req.branch?.name ?? 'N/A', fontSize: 11),
+                const VerticalDivider(width: 12, thickness: 1),
+                _buildInfoColumn('SERVICE TYPE', req.serviceType, color: Colors.blue, fontSize: 11),
+                const Spacer(),
+                _buildStatusIndicator(),
+                const Icon(Icons.arrow_forward_ios, size: 12, color: Colors.grey),
+              ]),
+              const SizedBox(height: 6),
+              // Second row: Pickup, Delivery, and Date
+              Row(children: [
+                _buildInfoColumn('PICKUP', req.pickupLocation ?? 'N/A', fontSize: 10, maxLines: 1),
+                const VerticalDivider(width: 12, thickness: 1),
+                _buildInfoColumn('DELIVERY', req.deliveryLocation ?? 'N/A', fontSize: 10, maxLines: 1),
+                const Spacer(),
+                _buildInfoColumn(
+                  'DATE', 
+                  req.pickupDate != null ? DateFormat('MMM dd').format(req.pickupDate!) : '-',
+                  fontSize: 10
                 ),
-              ],
-            ),
-            trailing: const Icon(Icons.arrow_forward_ios,
-                size: 16, color: Colors.red),
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => InTransitDetail(requisition: req),
-                ),
-              );
-            },
+              ]),
+            ],
           ),
-        );
-      },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusIndicator() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      margin: const EdgeInsets.only(right: 8),
+      decoration: BoxDecoration(
+        color: Colors.orange[100],
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orange[300]!, width: 0.5),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Container(width: 6, height: 6, decoration: BoxDecoration(color: Colors.orange[600], shape: BoxShape.circle)),
+        const SizedBox(width: 4),
+        Text('IN TRANSIT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.orange[800])),
+      ]),
+    );
+  }
+
+  Widget _buildInfoColumn(String label, String value, {Color? color, double fontSize = 12, int maxLines = 2}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(label, style: TextStyle(fontSize: fontSize-2, color: Colors.grey[600], fontWeight: FontWeight.w500)),
+        const SizedBox(height: 2),
+        Text(value, 
+          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.w600, color: color ?? Colors.black87),
+          maxLines: maxLines,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
     );
   }
 

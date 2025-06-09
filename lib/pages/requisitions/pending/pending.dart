@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../models/request.dart';
-import '../../../services/requisitions_service.dart';
+import '../../../services/requisitions/requisitions_service.dart';
 import 'requisitionDetail.dart';
 
 class PendingRequisitionsPage extends StatefulWidget {

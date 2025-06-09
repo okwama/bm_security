@@ -61,7 +61,7 @@ class SosService {
 
       // The API route is mounted at /api/sos in the server
       final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/api/sos'),
+        Uri.parse('${ApiConfig.baseUrl}/sos'),
         headers: _headers(), // Use the standard headers method for consistency
         body: jsonEncode(sosData),
       );

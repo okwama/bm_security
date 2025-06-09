@@ -11,14 +11,13 @@ import 'dart:io';
 
 import '../../../models/request.dart';
 import '../../../models/cash_count.dart';
-import '../../../services/requisitions_service.dart';
+import '../../../services/requisitions/requisitions_service.dart';
 import '../../../widgets/cash_count_dialog.dart';
 import '../../../pages/requisitions/cashCount_page.dart';
 import '../../../utils/auth_config.dart';
 
 class RequisitionDetail extends StatefulWidget {
   final Request request;
-  
 
   const RequisitionDetail({super.key, required this.request});
 
@@ -48,20 +47,18 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
     debugPrint('serviceType: ${widget.request.serviceType}');
   }
 
-
-
   @override
   void dispose() {
-    // Cancel the timer when the widget is disposed
+    // Don't stop tracking here, let it continue to in-transit
     _locationTimer?.cancel();
-    _requisitionsService.dispose();
     super.dispose();
   }
 
   Future<void> _confirmPickup() async {
     // Debug: Print service type info when pickup is confirmed
-    debugPrint('Confirming pickup - serviceTypeId: ${widget.request.serviceTypeId}, serviceType: ${widget.request.serviceType}');
-    
+    debugPrint(
+        'Confirming pickup - serviceTypeId: ${widget.request.serviceTypeId}, serviceType: ${widget.request.serviceType}');
+
     // For BSS service type (ID: 2), navigate to CashCountPage
     if (widget.request.serviceTypeId == 2) {
       try {
@@ -70,7 +67,6 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
           MaterialPageRoute(
             builder: (context) => CashCountPage(
               onConfirm: (cashCount) {
-                // This will be called when the user confirms the cash count
                 Navigator.of(context).pop(cashCount);
               },
             ),
@@ -85,22 +81,23 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         try {
           // Upload image if exists
           if (cashCount.imagePath != null) {
-            try {
-            } catch (e) {
+            try {} catch (e) {
               debugPrint('Error uploading image: $e');
               // Continue without image if upload fails
             }
           }
 
-
           // Call API to confirm pickup with cash count details
           await _requisitionsService.confirmPickup(
             widget.request.id,
             cashCount: cashCount,
-            // imageUrl: imageUrl,
           );
-          
-          await _initializeLocationTracking();
+
+          // Start location tracking if not already tracking
+          if (!_locationService
+              .isTrackingRequest(widget.request.id.toString())) {
+            await _initializeLocationTracking();
+          }
 
           if (mounted) {
             setState(() {
@@ -109,7 +106,6 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
             });
             await Future.delayed(const Duration(milliseconds: 1500));
             if (mounted) {
-              // Pass true to indicate success and trigger a refresh
               Navigator.of(context).pop(true);
             }
           }
@@ -135,7 +131,11 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
 
       try {
         await _requisitionsService.confirmPickup(widget.request.id);
-        await _initializeLocationTracking();
+
+        // Start location tracking if not already tracking
+        if (!_locationService.isTrackingRequest(widget.request.id.toString())) {
+          await _initializeLocationTracking();
+        }
 
         if (mounted) {
           setState(() {
@@ -189,9 +189,9 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
 
   void _showError(String message) {
     if (!mounted) return;
-    
+
     // Extract the actual error message if it's in the format 'statusCode: message'
-    final errorMessage = message.contains(': ') 
+    final errorMessage = message.contains(': ')
         ? message.split(': ').sublist(1).join(': ')
         : message;
 
@@ -231,10 +231,9 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
 
       // Start tracking for this request
       await _locationService.startTracking(widget.request.id.toString());
-      
+
       _trackingInitialized = true;
       debugPrint('Location tracking started for request ${widget.request.id}');
-      
     } catch (e) {
       debugPrint('Location tracking error: $e');
       if (mounted) {
@@ -301,7 +300,6 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
     }
   }
 
-
   Widget _buildInfoCard() {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -313,43 +311,54 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
             _buildInfoRow('Service Type', widget.request.serviceType),
             if (widget.request.cashCount != null) ...[
               const Divider(),
-              const Text('Cash Count Details', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              _buildInfoRow('50s', '${widget.request.cashCount!.fifties} × 50 = KES ${widget.request.cashCount!.fifties * 50}'),
-              _buildInfoRow('100s', '${widget.request.cashCount!.hundreds} × 100 = KES ${widget.request.cashCount!.hundreds * 100}'),
-              _buildInfoRow('200s', '${widget.request.cashCount!.twoHundreds} × 200 = KES ${widget.request.cashCount!.twoHundreds * 200}'),
-              _buildInfoRow('500s', '${widget.request.cashCount!.fiveHundreds} × 500 = KES ${widget.request.cashCount!.fiveHundreds * 500}'),
-              _buildInfoRow('1000s', '${widget.request.cashCount!.thousands} × 1000 = KES ${widget.request.cashCount!.thousands * 1000}'),
+              const Text('Cash Count Details',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              _buildInfoRow('50s',
+                  '${widget.request.cashCount!.fifties} × 50 = KES ${widget.request.cashCount!.fifties * 50}'),
+              _buildInfoRow('100s',
+                  '${widget.request.cashCount!.hundreds} × 100 = KES ${widget.request.cashCount!.hundreds * 100}'),
+              _buildInfoRow('200s',
+                  '${widget.request.cashCount!.twoHundreds} × 200 = KES ${widget.request.cashCount!.twoHundreds * 200}'),
+              _buildInfoRow('500s',
+                  '${widget.request.cashCount!.fiveHundreds} × 500 = KES ${widget.request.cashCount!.fiveHundreds * 500}'),
+              _buildInfoRow('1000s',
+                  '${widget.request.cashCount!.thousands} × 1000 = KES ${widget.request.cashCount!.thousands * 1000}'),
               const Divider(),
-              _buildInfoRow('Total Amount', 'KES ${widget.request.cashCount!.total}'),
+              _buildInfoRow(
+                  'Total Amount', 'KES ${widget.request.cashCount!.total}'),
               if (widget.request.cashCount!.sealNumber != null)
-                _buildInfoRow('Seal Number', widget.request.cashCount!.sealNumber!),
+                _buildInfoRow(
+                    'Seal Number', widget.request.cashCount!.sealNumber!),
               if (widget.request.cashImageUrl != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('Sealed Bag Image:', style: TextStyle(fontWeight: FontWeight.bold)),
+                      const Text('Sealed Bag Image:',
+                          style: TextStyle(fontWeight: FontWeight.bold)),
                       const SizedBox(height: 8),
                       Image.network(
                         widget.request.cashImageUrl!,
                         height: 150,
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => 
-                          const Text('Failed to load image'),
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Text('Failed to load image'),
                       ),
                     ],
                   ),
                 ),
               const Divider(),
             ],
-           
-         _buildInfoRow('Pickup Location', widget.request.pickupLocation ?? 'Not specified'),
-         _buildInfoRow('Delivery Location', widget.request.deliveryLocation ?? 'Not specified'),
+            _buildInfoRow('Pickup Location',
+                widget.request.pickupLocation ?? 'Not specified'),
+            _buildInfoRow('Delivery Location',
+                widget.request.deliveryLocation ?? 'Not specified'),
             if (widget.request.pickupDate != null)
               _buildInfoRow(
                 'Pickup Date',
-                DateFormat('MMM dd, yyyy hh:mm a').format(widget.request.pickupDate!),
+                DateFormat('MMM dd, yyyy hh:mm a')
+                    .format(widget.request.pickupDate!),
               ),
             _buildInfoRow(
               'Status',
@@ -421,59 +430,60 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
   // }
 // Replace your _buildActionButtons method with this temporarily:
 
-Widget _buildActionButtons() {
-  return Column(
-    children: [
-      // Show success message at the top for better visibility
-      if (_showSuccess)
-        Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20.0),
-          decoration: BoxDecoration(
-            color: Colors.green,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.check_circle, color: Colors.white, size: 24),
-              const SizedBox(width: 12),
-              const Text(
-                'Pickup confirmed successfully!',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  fontSize: 16,
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        // Show success message at the top for better visibility
+        if (_showSuccess)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                const SizedBox(width: 12),
+                const Text(
+                  'Pickup confirmed successfully!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-      
-      if (widget.request.status == Status.pending)
-        ElevatedButton.icon(
-          icon: const Icon(Icons.qr_code_scanner),
-          label: const Text("Confirm Pickup"),
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size.fromHeight(50),
+
+        if (widget.request.status == Status.pending)
+          ElevatedButton.icon(
+            icon: const Icon(Icons.qr_code_scanner),
+            label: const Text("Confirm Pickup"),
+            style: ElevatedButton.styleFrom(
+              minimumSize: const Size.fromHeight(50),
+            ),
+            onPressed: _isLoading ? null : _confirmPickup,
           ),
-          onPressed: _isLoading ? null : _confirmPickup,
-        ),
-      
-      if (_isLoading)
-        const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 8),
-              Text('Processing pickup...'),
-            ],
+
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 8),
+                Text('Processing pickup...'),
+              ],
+            ),
           ),
-        ),
-    ],
-  );
-}
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(

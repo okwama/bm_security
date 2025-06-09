@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:bm_security/services/api_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:bm_security/controllers/auth_controller.dart';
+import 'package:get_storage/get_storage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -53,6 +54,13 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (result['success']) {
+        // Store tokens and user data
+        final storage = GetStorage();
+        storage.write('token', result['data']['token']);
+        storage.write('refresh_token', result['data']['refresh_token']);
+        storage.write('user_id', result['data']['user']['id']);
+        storage.write('user_name', result['data']['user']['name']);
+
         _authController.isLoggedIn.value = true;
         Get.offAllNamed('/home');
         _showToast('Login successful', false);

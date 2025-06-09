@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:bm_security/pages/login/login_page.dart';
 import 'package:bm_security/services/api_service.dart';
-import 'package:bm_security/services/requisitions_service.dart';
+import 'package:bm_security/services/requisitions/requisitions_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../components/menu_tile.dart';
 import '../sos/sos_page.dart';

@@ -2,6 +2,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'cash_count.dart';
 import 'branch.dart';
 part 'request.g.dart';
+
 enum Priority {
   @JsonValue('low')
   low,
@@ -33,18 +34,18 @@ class Request {
   final String? deliveryLocation;
   @JsonKey(name: 'pickupDate', fromJson: _dateFromJson, toJson: _dateToJson)
   final DateTime? pickupDate;
-  
+
   @JsonKey(name: 'status', unknownEnumValue: Status.pending)
   final Status status;
-  
+
   @JsonKey(name: 'priority', unknownEnumValue: Priority.medium)
   final Priority priority;
-  
+
   @JsonKey(name: 'createdAt', fromJson: _dateFromJson, toJson: _dateToJson)
   final DateTime? createdAt;
   @JsonKey(name: 'ServiceType')
   final dynamic _serviceTypeData;
-  
+
   String get serviceType {
     try {
       if (_serviceTypeData == null) return '';
@@ -58,7 +59,7 @@ class Request {
       return '';
     }
   }
-  
+
   int get serviceTypeId {
     try {
       if (_serviceTypeData == null) return 0;
@@ -73,10 +74,10 @@ class Request {
       return 0;
     }
   }
-  
+
   @JsonKey(includeIfNull: false)
   final CashCount? cashCount;
-  
+
   @JsonKey(name: 'cashImageUrl', includeIfNull: false)
   final String? cashImageUrl;
 
@@ -97,38 +98,48 @@ class Request {
     this.cashCount,
     this.cashImageUrl,
     this.branch,
-  }) : _serviceTypeData = serviceType ?? (serviceTypeId != null ? {'id': serviceTypeId, 'name': serviceType is String ? serviceType : null} : null);
+  }) : _serviceTypeData = serviceType ??
+            (serviceTypeId != null
+                ? {
+                    'id': serviceTypeId,
+                    'name': serviceType is String ? serviceType : null
+                  }
+                : null);
 
   factory Request.fromJson(Map<String, dynamic> json) {
     try {
       print('Parsing Request JSON: $json');
-      
+
       // Safely parse ID with null check
-      final id = json['id'] is int 
-          ? json['id'] 
+      final id = json['id'] is int
+          ? json['id']
           : int.tryParse(json['id']?.toString() ?? '') ?? 0;
-      
+
       if (id == 0) {
         print('Warning: Invalid or missing ID in request JSON');
       }
 
       // Handle potential null or invalid enum values
       final status = Status.values.firstWhere(
-        (e) => e.toString().split('.').last == json['status']?.toString().toLowerCase(),
+        (e) =>
+            e.toString().split('.').last ==
+            json['status']?.toString().toLowerCase(),
         orElse: () => Status.pending,
       );
-      
+
       final priority = Priority.values.firstWhere(
-        (e) => e.toString().split('.').last == json['priority']?.toString().toLowerCase(),
+        (e) =>
+            e.toString().split('.').last ==
+            json['priority']?.toString().toLowerCase(),
         orElse: () => Priority.medium,
       );
 
       // Handle service type data
       dynamic serviceTypeData = json['ServiceType'] ?? json['serviceType'];
-      final serviceTypeId = json['serviceTypeId'] is int 
-          ? json['serviceTypeId'] 
+      final serviceTypeId = json['serviceTypeId'] is int
+          ? json['serviceTypeId']
           : int.tryParse(json['serviceTypeId']?.toString() ?? '');
-      
+
       if (serviceTypeData is String) {
         // If ServiceType is a string, create a proper object with ID and name
         serviceTypeData = {
@@ -142,21 +153,21 @@ class Request {
           'name': json['serviceType']?.toString() ?? 'Unknown',
         };
       }
-      
+
       // Safely parse cash count
       CashCount? cashCount;
       try {
         if (json['cashCount'] != null) {
           cashCount = CashCount.fromJson(
-            json['cashCount'] is Map<String, dynamic> 
-                ? json['cashCount'] 
+            json['cashCount'] is Map<String, dynamic>
+                ? json['cashCount']
                 : <String, dynamic>{},
           );
         }
       } catch (e) {
         print('Error parsing cashCount: $e');
       }
-      
+
       // Safely parse branch
       Branch? branch;
       try {
@@ -170,7 +181,7 @@ class Request {
       } catch (e) {
         print('Error parsing branch: $e');
       }
-      
+
       return Request(
         id: id,
         clientName: json['clientName']?.toString(),
@@ -240,7 +251,7 @@ class ServiceTypeInfo {
       name: json['name'] as String,
     );
   }
-  
+
   Map<String, dynamic> toJson() {
     return {
       'name': name,

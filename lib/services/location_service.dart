@@ -9,8 +9,10 @@ import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
+import 'package:bm_security/utils/auth_config.dart';
 
 class LocationService {
+  static const String _baseUrl = ApiConfig.baseUrl;
   static const String _locationKey = 'last_sent_location';
   static const Duration _minUpdateInterval = Duration(minutes: 1);
   bool _isTracking = false;
@@ -21,6 +23,23 @@ class LocationService {
   static final LocationService _instance = LocationService._internal();
   factory LocationService() => _instance;
   LocationService._internal();
+
+  // Add getters for tracking state
+  bool get isTracking => _isTracking;
+  String? get currentRequestId => _currentRequestId;
+
+  // Add method to check if tracking specific request
+  bool isTrackingRequest(String requestId) {
+    return _isTracking && _currentRequestId == requestId;
+  }
+
+  // Add method to transfer tracking to new request
+  Future<void> transferTracking(String newRequestId) async {
+    if (_isTracking) {
+      await stopTracking();
+    }
+    await startTracking(newRequestId);
+  }
 
   // Initialize the service
   Future<bool> initialize({required String authToken}) async {
@@ -63,11 +82,18 @@ class LocationService {
 
   // Start tracking location for a specific request
   Future<bool> startTracking(String requestId) async {
-    if (_isTracking) await stopTracking();
-    
+    if (_isTracking) {
+      if (_currentRequestId == requestId) {
+        // Already tracking this request
+        return true;
+      }
+      // Stop tracking previous request
+      await stopTracking();
+    }
+
     _currentRequestId = requestId;
     _isTracking = true;
-    
+
     try {
       // Save tracking info for background service
       final prefs = await SharedPreferences.getInstance();
@@ -75,16 +101,16 @@ class LocationService {
       if (_authToken != null) {
         await prefs.setString('auth_token', _authToken!);
       }
-      
+
       // Get initial position
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
       await _sendLocationUpdate(position);
-      
+
       // Start foreground service
       await _startForegroundService();
-      
+
       return true;
     } catch (e) {
       debugPrint('Error starting location tracking: $e');
@@ -121,31 +147,32 @@ class LocationService {
   // Stop tracking location
   Future<void> stopTracking() async {
     if (!_isTracking) return;
-    
+
     debugPrint('Stopping location tracking for request: $_currentRequestId');
-    
+
     _isTracking = false;
     final stoppedRequestId = _currentRequestId;
     _currentRequestId = null;
-    
+
     try {
       // Cancel background tasks
       if (Platform.isAndroid) {
         await Workmanager().cancelAll();
       }
-      
+
       // Clear saved tracking info
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('current_tracking_request');
       await prefs.remove('auth_token');
-      
-      debugPrint('Successfully stopped tracking for request: $stoppedRequestId');
+
+      debugPrint(
+          'Successfully stopped tracking for request: $stoppedRequestId');
     } catch (e) {
       debugPrint('Error stopping location tracking: $e');
       rethrow;
     }
   }
-  
+
   // Stop tracking for a specific request
   Future<void> stopTrackingForRequest(String requestId) async {
     if (_currentRequestId == requestId) {
@@ -168,7 +195,7 @@ class LocationService {
 
     try {
       final response = await http.post(
-        Uri.parse('YOUR_API_BASE_URL/api/locations'),
+        Uri.parse('$_baseUrl/locations'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $_authToken',
@@ -208,7 +235,7 @@ class LocationService {
 
             // Send to server
             final response = await http.post(
-              Uri.parse('YOUR_API_BASE_URL/api/locations'),
+              Uri.parse('$_baseUrl/locations'),
               headers: {
                 'Content-Type': 'application/json',
                 'Authorization': 'Bearer $authToken',
@@ -221,7 +248,8 @@ class LocationService {
             );
 
             if (response.statusCode != 201) {
-              debugPrint('Failed to send background location: ${response.body}');
+              debugPrint(
+                  'Failed to send background location: ${response.body}');
             }
           }
           return Future.value(true);
@@ -234,12 +262,6 @@ class LocationService {
     });
     return Future.value();
   }
-
-  // Check if tracking is active
-  bool get isTracking => _isTracking;
-
-  // Get current request ID being tracked
-  String? get currentRequestId => _currentRequestId;
 }
 
 // Global instance
