@@ -1,6 +1,7 @@
 // File: services/requisitions/request_updater.dart
 import 'dart:async';
 import 'dart:convert';
+import 'package:dio/dio.dart';
 import '../http/http_client_manager.dart';
 import '../http/auth_service.dart';
 import '../location_service.dart';
@@ -10,7 +11,7 @@ import '../../utils/auth_config.dart';
 import 'package:flutter/material.dart';
 
 class RequestUpdater {
-  final HttpClientManager _httpManager = HttpClientManager();
+  final HttpClientManager _httpManager = HttpClientManager.instance;
   final AuthService _authService = AuthService();
   final String _baseUrl = ApiConfig.baseUrl;
   final TextEditingController _sealNumberController = TextEditingController();
@@ -20,65 +21,80 @@ class RequestUpdater {
   final TextEditingController _receivingOfficerIdController =
       TextEditingController();
 
-  Future<Request> completeRequisition(
-    String requestId, {
-    bool isVaultDelivery = false,
-    String? photoUrl,
-    Map<String, dynamic>? bankDetails,
-    double? latitude,
-    double? longitude,
-    String? notes,
-  }) async {
-    final reqId = _generateRequestId('completeRequisition_$requestId');
-    _httpManager.addActiveRequest(reqId);
-
-    try {
-      print('=== RequestUpdater: Complete Requisition Debug ===');
-      print('Input requestId type: ${requestId.runtimeType}');
-      print('Input requestId value: $requestId');
-      print('isVaultDelivery: $isVaultDelivery');
-
-      await _stopLocationTracking(requestId);
-
-      final headers = _authService.getHeaders();
-      final response = isVaultDelivery
-          ? await _completeVaultDelivery(requestId, headers, photoUrl,
-              bankDetails, latitude, longitude, notes)
-          : await _completeStandardRequisition(requestId, headers);
-
-      print('=== RequestUpdater: Response Debug ===');
-      print('Response type: ${response.runtimeType}');
-      print('Response data: $response');
-
-      return _parseCompletionResponse(response, isVaultDelivery);
-    } catch (e, stackTrace) {
-      print('=== RequestUpdater: Complete Requisition Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
-      rethrow;
-    } finally {
-      _httpManager.removeActiveRequest(reqId);
-    }
-  }
-
   Future<Request> confirmPickup(
     int requestId, {
     CashCount? cashCount,
     String? imageUrl,
+    required String sealNumber,
+    double? latitude,
+    double? longitude,
   }) async {
     final reqId = _generateRequestId('confirmPickup_$requestId');
     _httpManager.addActiveRequest(reqId);
 
     try {
       print('Starting confirmPickup for requestId: $requestId');
-      final headers = _authService.getHeaders();
-      final body = _buildPickupRequestBody(cashCount, imageUrl);
+      print('CashCount: ${cashCount?.toJson()}');
+      print('ImageUrl: $imageUrl');
+      print('SealNumber: $sealNumber');
+      print('Location: $latitude, $longitude');
 
-      final response = await _executePickupRequest(requestId, headers, body);
-      return _parsePickupResponse(response, requestId);
+      final headers = await _authService.getHeaders();
+      final body = {
+        'cashCount': cashCount?.toJson(),
+        'imageUrl': imageUrl,
+        'sealNumber': sealNumber,
+        'latitude': latitude,
+        'longitude': longitude,
+      };
+
+      print('Making pickup request with body: $body');
+      print('Headers: $headers');
+
+      // Get Dio instance safely
+      final dio = _httpManager.dioClient;
+      if (dio == null) {
+        throw Exception('Failed to initialize HTTP client');
+      }
+
+      try {
+        final response = await dio.post(
+          '/requests/$requestId/pickup',
+          data: body,
+          options: Options(headers: headers),
+        );
+
+        print('Pickup response received: ${response.statusCode}');
+        print('Response data: ${response.data}');
+        return _parsePickupResponse(response.data, requestId);
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          // Try to refresh token and retry
+          await _authService.refreshAccessToken();
+          final newHeaders = await _authService.getHeaders();
+
+          final retryResponse = await dio.post(
+            '/requests/$requestId/pickup',
+            data: body,
+            options: Options(headers: newHeaders),
+          );
+
+          if (retryResponse.statusCode != 200) {
+            throw Exception(
+                'Failed to confirm pickup: ${retryResponse.statusCode} - ${retryResponse.data}');
+          }
+
+          return _parsePickupResponse(retryResponse.data, requestId);
+        }
+        rethrow;
+      }
     } catch (e, stackTrace) {
       print('Error in confirmPickup: $e');
+      if (e is DioException) {
+        print('DioError type: ${e.type}');
+        print('DioError response: ${e.response?.data}');
+        print('DioError status code: ${e.response?.statusCode}');
+      }
       print('Stack trace: $stackTrace');
       rethrow;
     } finally {
@@ -93,9 +109,10 @@ class RequestUpdater {
 
     try {
       print('Assigning request $requestId to vault officer $vaultOfficerId');
+      final headers = await _authService.getHeaders();
       final response = await _httpManager.client.post(
         Uri.parse('$_baseUrl/requests/$requestId/assign-vault-officer'),
-        headers: _authService.getHeaders(),
+        headers: headers,
         body: jsonEncode({
           'vaultOfficerId': vaultOfficerId,
           'vaultOfficerName': vaultOfficerName,
@@ -119,6 +136,112 @@ class RequestUpdater {
     }
   }
 
+  Future<Request> confirmDelivery(
+    int requestId, {
+    Map<String, dynamic>? bankDetails,
+    required double latitude,
+    required double longitude,
+    String? notes,
+  }) async {
+    final reqId = _generateRequestId('confirmDelivery_$requestId');
+    _httpManager.addActiveRequest(reqId);
+
+    try {
+      print('=== RequestUpdater: Confirm Delivery Debug ===');
+      print('Request ID: $requestId');
+      print('Latitude: $latitude');
+      print('Longitude: $longitude');
+      print('Bank Details: $bankDetails');
+      print('Notes: $notes');
+
+      // Validate required fields
+      if (latitude == null || longitude == null) {
+        throw Exception('Location data (latitude and longitude) is required');
+      }
+
+      final headers = await _authService.getHeaders();
+      final body = {
+        'bankDetails': bankDetails,
+        'latitude': latitude,
+        'longitude': longitude,
+        'notes': notes,
+      };
+
+      print('Making delivery confirmation request with body: $body');
+
+      // Get Dio instance safely
+      final dio = _httpManager.dioClient;
+      if (dio == null) {
+        throw Exception('Failed to initialize HTTP client');
+      }
+
+      try {
+        final response = await dio.post(
+          '/requests/$requestId/delivery',
+          data: body,
+          options: Options(headers: headers),
+        );
+
+        print(
+            'Delivery confirmation response received: ${response.statusCode}');
+        print('Response data: ${response.data}');
+
+        if (response.statusCode != 200) {
+          throw Exception(
+              'Failed to confirm delivery: ${response.statusCode} - ${response.data}');
+        }
+
+        // Parse the response
+        final responseData = response.data;
+        if (responseData is Map<String, dynamic> &&
+            responseData.containsKey('data')) {
+          return Request.fromJson(responseData['data']);
+        } else {
+          return Request.fromJson(responseData);
+        }
+      } on DioException catch (e) {
+        if (e.response?.statusCode == 401) {
+          // Try to refresh token and retry
+          await _authService.refreshAccessToken();
+          final newHeaders = await _authService.getHeaders();
+
+          final retryResponse = await dio.post(
+            '/requests/$requestId/delivery',
+            data: body,
+            options: Options(headers: newHeaders),
+          );
+
+          if (retryResponse.statusCode != 200) {
+            throw Exception(
+                'Failed to confirm delivery: ${retryResponse.statusCode} - ${retryResponse.data}');
+          }
+
+          final responseData = retryResponse.data;
+          if (responseData is Map<String, dynamic> &&
+              responseData.containsKey('data')) {
+            return Request.fromJson(responseData['data']);
+          } else {
+            return Request.fromJson(responseData);
+          }
+        }
+        rethrow;
+      }
+    } catch (e, stackTrace) {
+      print('=== RequestUpdater: Confirm Delivery Error ===');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      if (e is DioException) {
+        print('DioError type: ${e.type}');
+        print('DioError response: ${e.response?.data}');
+        print('DioError status code: ${e.response?.statusCode}');
+      }
+      print('Stack trace: $stackTrace');
+      rethrow;
+    } finally {
+      _httpManager.removeActiveRequest(reqId);
+    }
+  }
+
   // Helper methods
   String _generateRequestId(String operation) {
     return '${operation}_${DateTime.now().millisecondsSinceEpoch}';
@@ -132,95 +255,6 @@ class RequestUpdater {
     } catch (e) {
       print('Error stopping location tracking: $e');
     }
-  }
-
-  // Complete a standard requisition (non-vault delivery)
-  Future<dynamic> _completeStandardRequisition(
-    String requestId,
-    Map<String, String> headers,
-  ) async {
-    print('=== Standard Requisition Debug ===');
-    print('Request ID type: ${requestId.runtimeType}');
-    print('Request ID value: $requestId');
-
-    final body = {
-      'status': 'completed',
-    };
-
-    print('Request body: $body');
-
-    final response = await _httpManager.client.post(
-      Uri.parse('$_baseUrl/requests/$requestId/complete'),
-      headers: headers,
-      body: jsonEncode(body),
-    );
-
-    if (response.statusCode != 200) {
-      print('=== Standard Requisition Error ===');
-      print('Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      throw Exception(
-          'Failed to complete requisition: ${response.statusCode} - ${response.body}');
-    }
-
-    final responseData = jsonDecode(response.body);
-    print('Response data type: ${responseData.runtimeType}');
-    print('Response data: $responseData');
-    return responseData;
-  }
-
-  // Complete a vault delivery
-  Future<dynamic> _completeVaultDelivery(
-    String requestId,
-    Map<String, String> headers,
-    String? photoUrl,
-    Map<String, dynamic>? bankDetails,
-    double? latitude,
-    double? longitude,
-    String? notes,
-  ) async {
-    print('=== Vault Delivery Debug ===');
-    print('Request ID type: ${requestId.runtimeType}');
-    print('Request ID value: $requestId');
-    print('Photo URL: $photoUrl');
-    print('Bank Details: $bankDetails');
-    print('Latitude: $latitude');
-    print('Longitude: $longitude');
-    print('Notes: $notes');
-
-    if (photoUrl == null ||
-        bankDetails == null ||
-        latitude == null ||
-        longitude == null) {
-      throw Exception('Missing required parameters for vault delivery');
-    }
-
-    final body = {
-      'status': 'completed',
-      'photoUrl': photoUrl,
-      'bankDetails': bankDetails,
-      'latitude': latitude,
-      'longitude': longitude,
-      'notes': notes,
-    };
-
-    print('Request body: $body');
-
-    final response = await _httpManager.client.post(
-      Uri.parse('$_baseUrl/requests/$requestId/complete-vault-delivery'),
-      headers: headers,
-      body: jsonEncode(body),
-    );
-
-    if (response.statusCode != 200) {
-      print('=== Vault Delivery Error ===');
-      print('Status code: ${response.statusCode}');
-      print('Response body: ${response.body}');
-      throw Exception(
-          'Failed to complete vault delivery: ${response.statusCode} - ${response.body}');
-    }
-
-    return jsonDecode(response.body);
   }
 
   // Parse the completion response
@@ -247,19 +281,25 @@ class RequestUpdater {
     }
   }
 
-  // Log errors consistently
-  void _logError(String operation, dynamic error, StackTrace stackTrace) {
-    print('Error in $operation: $error');
-    print('Stack trace: $stackTrace');
-  }
-
-  // Build request body for pickup confirmation
+  // Build the pickup request body
   Map<String, dynamic> _buildPickupRequestBody(
       CashCount? cashCount, String? imageUrl) {
     final body = <String, dynamic>{};
 
     if (cashCount != null) {
-      body['cashCount'] = cashCount.toJson();
+      body['cashCount'] = {
+        'ones': cashCount.ones,
+        'fives': cashCount.fives,
+        'tens': cashCount.tens,
+        'twenties': cashCount.twenties,
+        'forties': cashCount.forties,
+        'fifties': cashCount.fifties,
+        'hundreds': cashCount.hundreds,
+        'twoHundreds': cashCount.twoHundreds,
+        'fiveHundreds': cashCount.fiveHundreds,
+        'thousands': cashCount.thousands,
+        'sealNumber': cashCount.sealNumber,
+      };
     }
 
     if (imageUrl != null) {
@@ -269,31 +309,42 @@ class RequestUpdater {
     return body;
   }
 
-  // Execute pickup request
-  Future<dynamic> _executePickupRequest(int requestId,
-      Map<String, String> headers, Map<String, dynamic> body) async {
-    final response = await _httpManager.client.post(
-      Uri.parse('$_baseUrl/requests/$requestId/confirm-pickup'),
-      headers: headers,
-      body: jsonEncode(body),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Failed to confirm pickup: ${response.statusCode} - ${response.body}');
-    }
-
-    return jsonDecode(response.body);
-  }
-
-  // Parse pickup response
+  // Parse the pickup response
   Request _parsePickupResponse(dynamic response, int requestId) {
     try {
-      return Request.fromJson(response);
+      print('=== Parse Pickup Response Debug ===');
+      print('Response type: ${response.runtimeType}');
+      print('Response data: $response');
+
+      if (response is Map<String, dynamic>) {
+        if (response.containsKey('data')) {
+          return Request.fromJson(response['data']);
+        } else {
+          return Request.fromJson(response);
+        }
+      } else if (response is String) {
+        final decoded = jsonDecode(response);
+        if (decoded is Map<String, dynamic> && decoded.containsKey('data')) {
+          return Request.fromJson(decoded['data']);
+        } else {
+          return Request.fromJson(decoded);
+        }
+      } else {
+        throw Exception('Invalid response format');
+      }
     } catch (e, stackTrace) {
-      _logError('parsePickupResponse', e, stackTrace);
-      throw Exception(
-          'Failed to parse pickup confirmation response for request $requestId');
+      print('=== Parse Pickup Response Error ===');
+      print('Error type: ${e.runtimeType}');
+      print('Error message: $e');
+      print('Stack trace: $stackTrace');
+      throw Exception('Failed to parse pickup response');
     }
+  }
+
+  void _logError(String operation, dynamic error, StackTrace stackTrace) {
+    print('=== $operation Error ===');
+    print('Error type: ${error.runtimeType}');
+    print('Error message: $error');
+    print('Stack trace: $stackTrace');
   }
 }

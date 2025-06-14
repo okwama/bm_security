@@ -14,9 +14,9 @@ Staff _$StaffFromJson(Map<String, dynamic> json) => Staff(
       role: json['role'] as String?,
       roleId: (json['roleId'] as num?)?.toInt(),
       status: (json['status'] as num?)?.toInt(),
-      emplNo: json['emplNo'] as String,
-      idNo: (json['idNo'] as num).toInt(),
-      photoUrl: json['photoUrl'] as String,
+      emplNo: json['emplNo'] as String?,
+      idNo: (json['idNo'] as num?)?.toInt(),
+      photoUrl: json['photoUrl'] as String?,
       requests: (json['requests'] as List<dynamic>?)
           ?.map((e) => StaffRequest.fromJson(e as Map<String, dynamic>))
           .toList(),

@@ -9,17 +9,13 @@ import 'package:image_picker/image_picker.dart';
 class ProfileService {
   static const String baseUrl = ApiConfig.baseUrl;
 
-  static String? _getAuthToken() {
+  static String? _getAuthtoken() {
     final box = GetStorage();
-    final token = box.read('token');
-    if (token == null) {
-      print('No authentication token found');
-    }
-    return token;
+    return box.read('token');
   }
 
   static Map<String, String> _headers([String? contentType]) {
-    final token = _getAuthToken();
+    final token = _getAuthtoken();
     return {
       'Content-Type': contentType ?? 'application/json',
       'Accept': 'application/json',
@@ -29,9 +25,9 @@ class ProfileService {
 
   Future<Map<String, dynamic>> getProfile() async {
     try {
-      final token = _getAuthToken();
+      final token = _getAuthtoken();
       print(
-          'Making profile request with token: ${token != null ? 'Token exists' : 'No token'}');
+          'Making profile request with token: ${token != null ? 'token exists' : 'No token'}');
 
       final response = await http.get(
         Uri.parse('$baseUrl/auth/profile'),
@@ -42,7 +38,7 @@ class ProfileService {
       print('Profile API Response Body: ${response.body}');
 
       if (response.statusCode == 401) {
-        print('Authentication failed - Token may be invalid or expired');
+        print('Authentication failed - token may be invalid or expired');
         throw Exception('Session expired. Please login again.');
       }
 

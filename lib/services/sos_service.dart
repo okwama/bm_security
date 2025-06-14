@@ -1,13 +1,14 @@
-  import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:get_storage/get_storage.dart';
 import 'package:bm_security/utils/auth_config.dart';
+import 'package:bm_security/services/api_service.dart';
 
 class SosService {
   static const String baseUrl = '${ApiConfig.baseUrl}/api';
 
-    static String? _getAuthToken() {
+  static String? _getAuthtoken() {
     final box = GetStorage();
     final token = box.read('token');
     if (token == null) {
@@ -15,55 +16,36 @@ class SosService {
     }
     return token;
   }
-    
+
   static Map<String, String> _headers([String? additionalContentType]) {
-    final token = _getAuthToken();
+    final token = _getAuthtoken();
     return {
       'Content-Type': additionalContentType ?? 'application/json',
       'Accept': 'application/json',
       if (token != null) 'Authorization': 'Bearer $token',
     };
   }
-  
-  
+
   static Future<void> sendSOS({
-    required int userId,
-    required String userName,
-    required String userPhone,
-    required String distressType,
     required double latitude,
     required double longitude,
-    String? address,
+    required String distressType,
   }) async {
     try {
-      final token = _getAuthToken();
-      if (token == null) {
-        throw Exception('Not authenticated');
-      }
-
-
-
-
-      // Create the SOS data to match server expectations
+      final apiService = ApiService();
       final Map<String, dynamic> sosData = {
-        'userId': userId,
-        'userName': userName,
-        'userPhone': userPhone,
-        'distressType': distressType,
         'latitude': latitude,
         'longitude': longitude,
-        'address': address,
-        'status': 'active',
+        'sos_type': distressType,
       };
 
       print('Sending SOS alert to: $baseUrl/sos');
       print('SOS data: ${jsonEncode(sosData)}');
 
-      // The API route is mounted at /api/sos in the server
-      final response = await http.post(
-        Uri.parse('${ApiConfig.baseUrl}/sos'),
-        headers: _headers(), // Use the standard headers method for consistency
-        body: jsonEncode(sosData),
+      final response = await apiService.makeAuthenticatedRequest(
+        'POST',
+        '/sos',
+        body: sosData,
       );
 
       print('SOS response status: ${response.statusCode}');

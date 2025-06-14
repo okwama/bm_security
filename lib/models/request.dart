@@ -1,6 +1,7 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'cash_count.dart';
 import 'branch.dart';
+import 'delivery_completion.dart';
 part 'request.g.dart';
 
 enum Priority {
@@ -40,6 +41,9 @@ class Request {
 
   @JsonKey(name: 'priority', unknownEnumValue: Priority.medium)
   final Priority priority;
+
+  @JsonKey(name: 'myStatus', defaultValue: 0)
+  final int myStatus;
 
   @JsonKey(name: 'createdAt', fromJson: _dateFromJson, toJson: _dateToJson)
   final DateTime? createdAt;
@@ -84,6 +88,9 @@ class Request {
   @JsonKey(name: 'branch', includeIfNull: false)
   final Branch? branch;
 
+  @JsonKey(name: 'deliveryCompletion')
+  final DeliveryCompletion? deliveryCompletion;
+
   Request({
     required this.id,
     this.clientName,
@@ -92,12 +99,14 @@ class Request {
     required this.pickupDate,
     required this.status,
     required this.priority,
+    this.myStatus = 0,
     required this.createdAt,
     dynamic serviceType,
     int? serviceTypeId,
     this.cashCount,
     this.cashImageUrl,
     this.branch,
+    this.deliveryCompletion,
   }) : _serviceTypeData = serviceType ??
             (serviceTypeId != null
                 ? {
@@ -182,6 +191,16 @@ class Request {
         print('Error parsing branch: $e');
       }
 
+      DeliveryCompletion? deliveryCompletion;
+      try {
+        if (json['deliveryCompletion'] != null) {
+          deliveryCompletion = DeliveryCompletion.fromJson(
+              json['deliveryCompletion'] as Map<String, dynamic>);
+        }
+      } catch (e) {
+        print('Error parsing deliveryCompletion: $e');
+      }
+
       return Request(
         id: id,
         clientName: json['clientName']?.toString(),
@@ -196,6 +215,7 @@ class Request {
         cashCount: cashCount,
         cashImageUrl: json['cashImageUrl']?.toString(),
         branch: branch,
+        deliveryCompletion: deliveryCompletion,
       );
     } catch (e, stackTrace) {
       print('Error parsing Request from JSON: $e');
@@ -220,6 +240,8 @@ class Request {
       'cashCount': cashCount?.toJson(),
       'cashImageUrl': cashImageUrl,
       'branch': branch?.toJson(),
+      if (deliveryCompletion != null)
+        'deliveryCompletion': deliveryCompletion!.toJson(),
     };
   }
 

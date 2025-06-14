@@ -399,7 +399,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
           fiveHundreds: _getControllerValue('500'),
           thousands: _getControllerValue('1000'),
           sealNumber: _sealNumberController.text,
-          imagePath: _image?.path,
+          imageUrl: _image?.path,
         ),
       );
       Navigator.pop(context);

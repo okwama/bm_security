@@ -62,7 +62,7 @@ class NoConnectionPage extends StatelessWidget {
                       onRetry!();
                     } else {
                       final authController = Get.find<AuthController>();
-                      if (authController.isLoggedIn.value) {
+                      if (authController.isAuthenticated) {
                         Get.offAllNamed('/home');
                       } else {
                         Get.offAllNamed('/login');

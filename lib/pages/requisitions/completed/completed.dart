@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:intl/intl.dart';
 import 'package:bm_security/models/request.dart';
 import 'package:bm_security/services/requisitions/requisitions_service.dart';
+import '../../../components/loading_spinner.dart';
 
 class CompletedPage extends StatefulWidget {
   const CompletedPage({super.key});
@@ -15,6 +16,7 @@ class _CompletedPageState extends State<CompletedPage> {
   final RequisitionsService _requisitionsService = RequisitionsService();
   bool _isLoading = true;
   List<Request> _completedRequests = [];
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -22,85 +24,28 @@ class _CompletedPageState extends State<CompletedPage> {
     _loadCompletedRequests();
   }
 
-  void _showCompletionDialog(Request request) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Mark as Completed'),
-        content: const Text('Are you sure you want to mark this requisition as completed? This will stop location tracking.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('CANCEL'),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.pop(context);
-              await _markAsCompleted(request);
-            },
-            child: const Text('COMPLETE'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _loadCompletedRequests() async {
+    if (!mounted) return;
+
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
     try {
-      // In a real app, you would fetch completed requests from your API
-      // For now, we'll use an empty list
-      setState(() {
-        _isLoading = false;
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
+      final requests = await _requisitionsService.getCompletedRequests();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to load completed requests: $e')),
-        );
-      }
-    }
-  }
-  
-  // In a real app, this would be called when marking a request as completed
-  Future<void> _markAsCompleted(Request request) async {
-    try {
-      setState(() => _isLoading = true);
-      
-      // Get current location if needed or use default values
-      // Note: You might want to implement proper location fetching logic here
-      final double? latitude = 0.0; // Replace with actual location logic
-      final double? longitude = 0.0; // Replace with actual location logic
-      
-      // Complete the requisition with all required parameters
-      await _requisitionsService.completeRequisition(
-        request.id.toString(),
-        photoUrl: '',
-        bankDetails: null, // Since bankDetails is not available in Request model
-        latitude: latitude,
-        longitude: longitude,
-        notes: 'Completed by user',
-      );
-      
-      if (mounted) {
-        // Refresh the list
-        await _loadCompletedRequests();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Requisition marked as completed')),
-        );
+        setState(() {
+          _completedRequests = requests;
+          _isLoading = false;
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to complete requisition: $e')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _errorMessage = 'Failed to load completed requests: $e';
+        });
       }
     }
   }
@@ -108,27 +53,301 @@ class _CompletedPageState extends State<CompletedPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Completed Requisitions'),
+      backgroundColor: const Color(0xFFF8FAFF),
+      appBar: _buildAppBar(),
+      body: _buildBody(),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      title: const Text(
+        'Completed',
+        style: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: Color(0xFF1565C0),
+        ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _completedRequests.isEmpty
-              ? const Center(child: Text('No completed requisitions'))
-              : ListView.builder(
-                  itemCount: _completedRequests.length,
-                  itemBuilder: (context, index) {
-                    final request = _completedRequests[index];
-                    return ListTile(
-                      title: Text('Requisition #${request.id}'),
-                      subtitle: Text('Created on ${request.createdAt != null ? DateFormat.yMd().add_jm().format(request.createdAt!) : 'N/A'}'),
-                      onTap: () {
-                        // Show completion dialog
-                        _showCompletionDialog(request);
-                      },
-                    );
-                  },
+      backgroundColor: Colors.white,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      centerTitle: false,
+      actions: [
+        IconButton(
+          icon: const Icon(
+            Icons.refresh,
+            color: Color(0xFF1976D2),
+            size: 22,
+          ),
+          onPressed: _loadCompletedRequests,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildBody() {
+    if (_isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF1976D2)),
+        ),
+      );
+    }
+
+    if (_errorMessage != null) {
+      return _ErrorView(
+        message: _errorMessage!,
+        onRetry: _loadCompletedRequests,
+      );
+    }
+
+    if (_completedRequests.isEmpty) {
+      return const _EmptyView();
+    }
+
+    return RefreshIndicator(
+      onRefresh: _loadCompletedRequests,
+      color: const Color(0xFF1976D2),
+      child: ListView.separated(
+        padding: const EdgeInsets.all(12),
+        itemCount: _completedRequests.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 8),
+        itemBuilder: (context, index) => _CompactRequestCard(
+          request: _completedRequests[index],
+        ),
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  final String message;
+  final VoidCallback onRetry;
+
+  const _ErrorView({
+    required this.message,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.error_outline,
+              size: 48,
+              color: Color(0xFF1976D2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Something went wrong',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: onRetry,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
                 ),
+              ),
+              child: const Text('Try Again'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyView extends StatelessWidget {
+  const _EmptyView();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              size: 64,
+              color: Color(0xFF1976D2),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'All done!',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'No completed requests yet',
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey[600],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CompactRequestCard extends StatelessWidget {
+  final Request request;
+
+  const _CompactRequestCard({required this.request});
+
+  @override
+  Widget build(BuildContext context) {
+    final pickupDate = request.pickupDate != null
+        ? DateFormat('MMM dd').format(request.pickupDate!)
+        : '--';
+    
+    final completedBy = request.deliveryCompletion?.completedByName ?? 'Unknown';
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE3F2FD), width: 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          // Handle tap
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              // Status indicator
+              Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1976D2),
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 16),
+              
+              // Main content
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Service type and date
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            request.serviceType ?? 'Unknown Service',
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1565C0),
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Text(
+                          pickupDate,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    
+                    // Branch and completed by
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.business,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            request.branch?.name ?? 'Unknown Branch',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[700],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.person,
+                          size: 14,
+                          color: Colors.grey[500],
+                        ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'Completed by $completedBy',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[600],
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Chevron
+              Icon(
+                Icons.chevron_right,
+                size: 20,
+                color: Colors.grey[400],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -24,11 +24,15 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.IOException
 import java.util.concurrent.TimeUnit
+import java.net.HttpURLConnection
+import java.net.URL
+import java.io.OutputStreamWriter
+import org.json.JSONObject
 
 class LocationWorker(
-    context: Context,
-    workerParams: WorkerParameters
-) : CoroutineWorker(context, workerParams) {
+    private val context: Context,
+    params: WorkerParameters
+) : CoroutineWorker(context, params) {
 
     private val TAG = "LocationWorker"
     private val locationClient: FusedLocationProviderClient =
@@ -41,21 +45,28 @@ class LocationWorker(
     override suspend fun doWork(): Result {
         Log.d(TAG, "Location worker started")
 
-        // Show foreground notification
-        val notification = createNotification("Tracking your location")
-        setForeground(createForegroundInfo(notification))
-
         try {
+            // Show foreground notification
+            val notification = createNotification("Tracking your location")
+            setForeground(createForegroundInfo(notification))
+
             // Get last known location
             val lastLocation = getLastKnownLocation()
-            lastLocation?.let { location ->
-                sendLocationToServer(location)
+            if (lastLocation != null) {
+                Log.d(TAG, "Got last known location: ${lastLocation.latitude}, ${lastLocation.longitude}")
+                sendLocationToServer(lastLocation)
+            } else {
+                Log.w(TAG, "No last known location available")
             }
 
             // Request location updates
             val locationResult = requestLocationUpdates()
-            sendLocationToServer(locationResult)
-
+            if (locationResult != null) {
+                Log.d(TAG, "Got new location: ${locationResult.latitude}, ${locationResult.longitude}")
+                sendLocationToServer(locationResult)
+            } else {
+                Log.w(TAG, "Failed to get new location")
+            }
 
             return Result.success()
         } catch (e: Exception) {
@@ -73,91 +84,74 @@ class LocationWorker(
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private suspend fun requestLocationUpdates(): Location {
-        val locationRequest = LocationRequest.create().apply {
-            interval = TimeUnit.MINUTES.toMillis(15)
-            fastestInterval = TimeUnit.MINUTES.toMillis(5)
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
-
-        return suspendCancellableCoroutine { continuation ->
-            locationClient.requestLocationUpdates(
-                locationRequest,
-                object : LocationCallback() {
-                    override fun onLocationResult(locationResult: LocationResult) {
-                        locationResult.lastLocation?.let { location ->
-                            if (!continuation.isCompleted) {
-                                continuation.resume(location, null)
-                            }
-                        }
-                    }
-                },
-                Looper.getMainLooper()
-            )
+    private suspend fun requestLocationUpdates(): Location? {
+        return try {
+            locationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null).await()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting current location", e)
+            null
         }
     }
 
     private suspend fun sendLocationToServer(location: Location) {
-        val sharedPrefs = applicationContext.getSharedPreferences("bm_security", Context.MODE_PRIVATE)
-        val requestId = sharedPrefs.getLong("current_request_id", -1)
-        val authToken = sharedPrefs.getString("auth_token", "")
-
-        if (requestId == -1L || authToken.isNullOrEmpty()) {
-            Log.e(TAG, "Missing request ID or auth token")
-            return
-        }
-
-        val client = OkHttpClient()
-        val mediaType = "application/json; charset=utf-8".toMediaType()
-        val requestBody = """
-            {
-                "requestId": $requestId,
-                "latitude": ${location.latitude},
-                "longitude": ${location.longitude}
-            }
-        """.trimIndent().toRequestBody(mediaType)
-
-        val request = Request.Builder()
-            .url("YOUR_API_BASE_URL/api/locations")
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Authorization", "Bearer $authToken")
-            .post(requestBody)
-            .build()
-
         try {
-            val response = client.newCall(request).execute()
-            if (!response.isSuccessful) {
-                Log.e(TAG, "Failed to send location: ${response.code} - ${response.body?.string()}")
-            } else {
-                Log.d(TAG, "Location sent successfully")
+            // Get stored request ID and auth token
+            val prefs = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
+            val requestId = prefs.getString("flutter.current_tracking_request", null)
+            val authToken = prefs.getString("flutter.auth_token", null)
+            val baseUrl = prefs.getString("flutter.base_url", "http://192.168.100.10:5000")
+
+            if (requestId == null || authToken == null) {
+                Log.e(TAG, "Missing request ID or auth token")
+                return
             }
-        } catch (e: IOException) {
-            Log.e(TAG, "Error sending location", e)
+
+            val url = URL("$baseUrl/api/locations")
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Authorization", "Bearer $authToken")
+            connection.doOutput = true
+
+            val jsonBody = JSONObject().apply {
+                put("requestId", requestId)
+                put("latitude", location.latitude)
+                put("longitude", location.longitude)
+            }
+
+            OutputStreamWriter(connection.outputStream).use { writer ->
+                writer.write(jsonBody.toString())
+                writer.flush()
+            }
+
+            val responseCode = connection.responseCode
+            if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                Log.d(TAG, "Location sent successfully")
+            } else {
+                Log.e(TAG, "Failed to send location: $responseCode")
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending location to server", e)
         }
     }
 
-    private fun createNotification(contentText: String): Notification {
-        createNotificationChannel()
+    private fun createNotification(message: String): Notification {
+        val channelId = "location_service"
+        val channelName = "Location Service"
+        val importance = NotificationManager.IMPORTANCE_LOW
 
-        val intent = Intent(applicationContext, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelId, channelName, importance).apply {
+                description = "Used for tracking location in background"
+            }
+            notificationManager.createNotificationChannel(channel)
         }
 
-        val pendingIntent = PendingIntent.getActivity(
-            applicationContext,
-            0,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        return NotificationCompat.Builder(applicationContext, CHANNEL_ID)
+        return NotificationCompat.Builder(context, channelId)
             .setContentTitle("BM Security")
-            .setContentText(contentText)
+            .setContentText(message)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .setContentIntent(pendingIntent)
             .build()
     }
 
@@ -165,21 +159,7 @@ class LocationWorker(
         return ForegroundInfo(NOTIFICATION_ID, notification)
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Location Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Tracks your location in the background"
-            }
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
     companion object {
-        private const val CHANNEL_ID = "location_service"
         private const val NOTIFICATION_ID = 1001
     }
 }

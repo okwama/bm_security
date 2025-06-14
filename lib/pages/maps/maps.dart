@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../components/loading_spinner.dart';
 
 class MapsPage extends StatefulWidget {
   const MapsPage({super.key});
@@ -22,9 +23,7 @@ class _MapsPageState extends State<MapsPage> {
           // TODO: Implement refresh logic
         },
         child: _isLoading
-            ? const Center(
-                child: CircularProgressIndicator(),
-              )
+            ? const LoadingSpinner.fullScreen(message: 'Loading map...')
             : const Center(
                 child: Text('Maps Page'),
               ),

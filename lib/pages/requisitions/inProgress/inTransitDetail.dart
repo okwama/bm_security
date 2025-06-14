@@ -12,6 +12,7 @@ import 'package:bm_security/services/staff_service.dart';
 import 'package:bm_security/services/location_service.dart';
 import 'package:bm_security/widgets/error_dialog.dart' show showErrorDialog;
 import 'dart:async';
+import '../../../components/loading_spinner.dart';
 
 class InTransitDetail extends StatefulWidget {
   final dynamic requisition;
@@ -62,7 +63,6 @@ class _InTransitDetailState extends State<InTransitDetail> {
     super.initState();
     _isVaultDelivery = widget.requisition.serviceType == 'CDM' ||
         widget.requisition.serviceType == 'BSS';
-    _loadVaultOfficers();
     if (!_locationService.isTrackingRequest(widget.requisition.id.toString())) {
       _startLocationTracking();
     }
@@ -81,32 +81,6 @@ class _InTransitDetailState extends State<InTransitDetail> {
     _receivingOfficerPhoneController.dispose();
     _notesController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadVaultOfficers() async {
-    if (mounted) {
-      setState(() => _isSubmitting = true);
-    }
-    try {
-      final officers = await _staffService.getVaultOfficers();
-      if (mounted) {
-        setState(() {
-          _vaultOfficers = officers;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        showErrorDialog(
-          context,
-          'Error',
-          'Failed to load vault officers: $e',
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-      }
-    }
   }
 
   Future<void> _startLocationTracking() async {
@@ -202,13 +176,15 @@ class _InTransitDetailState extends State<InTransitDetail> {
     try {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.camera,
-        imageQuality: 85,
+        imageQuality: 80, // Optimized for performance
+        maxWidth: 1024,
+        maxHeight: 1024,
       );
 
       if (image != null) {
         setState(() {
           _imageFile = File(image.path);
-          _imageUrl = 'https://example.com/uploaded-image.jpg';
+          _imageUrl = null; // Reset URL until uploaded
         });
       }
     } catch (e) {
@@ -222,12 +198,294 @@ class _InTransitDetailState extends State<InTransitDetail> {
     }
   }
 
+  Future<String?> _uploadImage() async {
+    if (_imageFile == null) return null;
+
+    try {
+      // Convert File to XFile for upload
+      final xFile = XFile(_imageFile!.path);
+      final imageUrl = await _requisitionsService.uploadImage(xFile);
+
+      if (mounted) {
+        setState(() {
+          _imageUrl = imageUrl;
+        });
+      }
+
+      return imageUrl;
+    } catch (e) {
+      print('Error uploading image: $e');
+      throw Exception('Failed to upload image: $e');
+    }
+  }
+
+  Future<void> _getCurrentLocation() async {
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          throw Exception('Location permissions are denied');
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        throw Exception(
+            'Location permissions are permanently denied. Please enable in settings.');
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 15),
+      );
+
+      if (mounted) {
+        setState(() {
+          _currentPosition = position;
+        });
+      }
+    } catch (e) {
+      throw Exception('Failed to get current location: $e');
+    }
+  }
+
+  bool _validateDeliveryForm() {
+    // Basic form validation
+    if (_formKey.currentState?.validate() != true) {
+      _showErrorSnackBar('Please fill all required fields');
+      return false;
+    }
+
+    // Vault delivery specific validations
+    if (_isVaultDelivery && _isBankDetailsExpanded) {
+      if (_bankNameController.text.trim().isEmpty ||
+          _bankAddressController.text.trim().isEmpty ||
+          _receivingOfficerIdController.text.trim().isEmpty ||
+          _receivingOfficerNameController.text.trim().isEmpty) {
+        _showErrorSnackBar('Please fill all bank details');
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  Future<void> _prepareDeliveryData() async {
+    print('=== Preparing Delivery Data ===');
+
+    // Step 1: Get current location
+    await _getCurrentLocation();
+    if (_currentPosition == null) {
+      throw Exception(
+          'Unable to get current location. Please ensure GPS is enabled.');
+    }
+    print(
+        'Location obtained: ${_currentPosition!.latitude}, ${_currentPosition!.longitude}');
+  }
+
+  Future<Map<String, dynamic>?> _validateUserAuthentication() async {
+    final userId = _storage.read('user_id');
+    final userName = _storage.read('user_name');
+
+    if (userId != null && userName != null) {
+      return {'userId': userId, 'userName': userName};
+    }
+
+    // Try to refresh token
+    try {
+      print('Refreshing authentication token...');
+      final authService = AuthService();
+      await authService.refreshAccessToken();
+
+      final newUserId = _storage.read('user_id');
+      final newUserName = _storage.read('user_name');
+
+      if (newUserId != null && newUserName != null) {
+        return {'userId': newUserId, 'userName': newUserName};
+      }
+    } catch (e) {
+      print('Token refresh failed: $e');
+    }
+
+    // Show session expired dialog
+    if (mounted) {
+      await _showSessionExpiredDialog();
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _buildBankDetails() {
+    if (_isVaultDelivery && _isBankDetailsExpanded) {
+      return {
+        'bankName': _bankNameController.text.trim(),
+        'bankAddress': _bankAddressController.text.trim(),
+        'receivingOfficerId':
+            int.tryParse(_receivingOfficerIdController.text.trim()),
+        'receivingOfficerName': _receivingOfficerNameController.text.trim(),
+        'receivingOfficerPhone': _receivingOfficerPhoneController.text.trim(),
+      };
+    }
+    return null;
+  }
+
+  Future<void> _handleDeliverySuccess() async {
+    print('=== Delivery Completed Successfully ===');
+
+    if (mounted) {
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 8),
+              Text('Delivery completed successfully'),
+            ],
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+
+      // Navigate back with success result
+      Navigator.of(context).pop(true);
+    }
+  }
+
+  Future<void> _handleDeliveryError(dynamic error) async {
+    String errorMessage = 'Failed to complete delivery';
+    bool showRetry = true;
+
+    if (error.toString().contains('location')) {
+      errorMessage = 'Location error: ${error.toString()}';
+      showRetry = true;
+    } else if (error.toString().contains('upload')) {
+      errorMessage = 'Image upload failed: ${error.toString()}';
+      showRetry = true;
+    } else if (error.toString().contains('network') ||
+        error.toString().contains('connection')) {
+      errorMessage = 'Network error. Please check your connection.';
+      showRetry = true;
+    } else {
+      errorMessage = error.toString();
+    }
+
+    if (mounted) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delivery Error'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(errorMessage),
+              SizedBox(height: 8),
+              Text(
+                'Please try again or contact support if the problem persists.',
+                style: TextStyle(color: Colors.grey[600], fontSize: 12),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text('Cancel'),
+            ),
+            if (showRetry)
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _completeDelivery(); // Retry
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text('Retry'),
+              ),
+          ],
+        ),
+      );
+    }
+  }
+
+  Future<void> _showSessionExpiredDialog() async {
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 8),
+            Text('Session Expired'),
+          ],
+        ),
+        content:
+            Text('Your session has expired. Please login again to continue.'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.of(context).pop(); // Close delivery screen
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              Navigator.of(context)
+                  .pushNamedAndRemoveUntil('/login', (route) => false);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              foregroundColor: Colors.white,
+            ),
+            child: Text('Login Again'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(String message) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(Icons.error_outline, color: Colors.white),
+              SizedBox(width: 8),
+              Expanded(child: Text(message)),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final primaryColorLight = primaryColor.withOpacity(0.1);
+    final primaryColorMedium = primaryColor.withOpacity(0.2);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: primaryColor,
+        foregroundColor: primaryColor,
         elevation: 0,
         leading: Container(
           margin: const EdgeInsets.all(6),
@@ -256,21 +514,61 @@ class _InTransitDetailState extends State<InTransitDetail> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (widget.requisition.serviceType != "Pick & Drop") ...[
-                _buildPhotoSealSection(),
-                const SizedBox(height: 16),
-              ],
+              // Status Card
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryColorLight,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: primaryColorMedium),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: primaryColorMedium,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Icon(Icons.local_shipping,
+                          color: primaryColor, size: 20),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Delivery in Progress',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              color: primaryColor,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Text(
+                            'Complete the delivery details below',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
               if (_isVaultDelivery) ...[
-                _buildBankDetailsButton(),
-                const SizedBox(height: 16),
-              ],
-              if (_vaultOfficers.isNotEmpty) ...[
-                _buildVaultOfficerSection(),
+                _buildBankDetailsButton(
+                    primaryColor, primaryColorLight, primaryColorMedium),
                 const SizedBox(height: 16),
               ],
               _buildNotesField(),
               const SizedBox(height: 24),
-              _buildCompleteButton(),
+              _buildCompleteButton(primaryColor),
             ],
           ),
         ),
@@ -278,137 +576,15 @@ class _InTransitDetailState extends State<InTransitDetail> {
     );
   }
 
-  Widget _buildPhotoSealSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Seal Number & Photo',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextFormField(
-                  controller: _sealNumberController,
-                  decoration: InputDecoration(
-                    hintText: 'Enter seal number',
-                    prefixIcon: Container(
-                      margin: const EdgeInsets.all(6),
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.blue.shade100,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: Icon(
-                        Icons.security,
-                        color: Colors.blue.shade700,
-                        size: 14,
-                      ),
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.trim().isEmpty) {
-                      return 'Seal number is required';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              Container(
-                width: 50,
-                height: 50,
-                margin: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: Colors.grey.shade300),
-                  ),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(12),
-                    onTap: _takePhoto,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: _imageFile == null
-                            ? LinearGradient(
-                                colors: [
-                                  Colors.grey.shade100,
-                                  Colors.grey.shade50,
-                                ],
-                              )
-                            : null,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: _imageFile == null
-                          ? Icon(
-                              Icons.camera_alt,
-                              color: Colors.grey.shade600,
-                              size: 24,
-                            )
-                          : Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.file(
-                                    _imageFile!,
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                Positioned(
-                                  top: 4,
-                                  right: 4,
-                                  child: Container(
-                                    padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withOpacity(0.7),
-                                      borderRadius: BorderRadius.circular(4),
-                                    ),
-                                    child: const Icon(
-                                      Icons.edit,
-                                      color: Colors.white,
-                                      size: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBankDetailsButton() {
+  Widget _buildBankDetailsButton(
+      Color primaryColor, Color primaryColorLight, Color primaryColorMedium) {
     return Container(
       width: double.infinity,
       height: 48,
       decoration: BoxDecoration(
-        gradient: LinearGradient(colors: [Colors.blue.shade50, Colors.blue]),
+        gradient: LinearGradient(colors: [primaryColorLight, primaryColor]),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.blue.shade200),
+        border: Border.all(color: primaryColorMedium),
       ),
       child: Material(
         color: Colors.transparent,
@@ -422,11 +598,11 @@ class _InTransitDetailState extends State<InTransitDetail> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade100,
+                    color: primaryColorMedium,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.account_balance,
-                      color: Colors.blue.shade700, size: 20),
+                      color: primaryColor, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -434,80 +610,16 @@ class _InTransitDetailState extends State<InTransitDetail> {
                     'Add Bank Details',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: Colors.blue.shade700,
+                          color: primaryColor,
                         ),
                   ),
                 ),
-                Icon(Icons.arrow_forward_ios,
-                    color: Colors.blue.shade700, size: 16),
+                Icon(Icons.arrow_forward_ios, color: primaryColor, size: 16),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildVaultOfficerSection() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Vault Officer (Optional)',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Colors.grey.shade700,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey.shade300),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: DropdownButtonFormField<Staff>(
-            decoration: InputDecoration(
-              hintText: 'Select vault officer',
-              prefixIcon: Container(
-                margin: const EdgeInsets.all(8),
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.purple.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  Icons.person,
-                  color: Colors.purple.shade700,
-                  size: 16,
-                ),
-              ),
-              border: InputBorder.none,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 16,
-                horizontal: 16,
-              ),
-            ),
-            value: _selectedVaultOfficer,
-            items: _vaultOfficers.map((officer) {
-              return DropdownMenuItem<Staff>(
-                value: officer,
-                child: Text(officer.name),
-              );
-            }).toList(),
-            onChanged: (value) {
-              setState(() {
-                _selectedVaultOfficer = value;
-              });
-            },
-            validator: (value) {
-              if (_isVaultDelivery && value == null) {
-                return 'Please select a vault officer';
-              }
-              return null;
-            },
-          ),
-        ),
-      ],
     );
   }
 
@@ -558,13 +670,13 @@ class _InTransitDetailState extends State<InTransitDetail> {
     );
   }
 
-  Widget _buildCompleteButton() {
+  Widget _buildCompleteButton(Color primaryColor) {
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton(
         onPressed: _isSubmitting ? null : _completeDelivery,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.primary,
+          backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -579,10 +691,7 @@ class _InTransitDetailState extends State<InTransitDetail> {
               const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
+                child: LoadingSpinner.button(),
               )
             else ...[
               const Icon(Icons.check_circle, size: 20),
@@ -926,21 +1035,24 @@ class _InTransitDetailState extends State<InTransitDetail> {
   }
 
   Future<void> _completeDelivery() async {
-    if (_formKey.currentState?.validate() != true) {
-      return;
-    }
+    print('=== Starting Delivery Completion Process ===');
+    print('Service Type: ${widget.requisition.serviceType}');
+    print('Is Vault Delivery: $_isVaultDelivery');
+    print(
+        'Current Position: ${_currentPosition?.latitude}, ${_currentPosition?.longitude}');
 
-    if (_isVaultDelivery && _isBankDetailsExpanded) {
-      if (_bankNameController.text.isEmpty ||
-          _bankAddressController.text.isEmpty ||
-          _receivingOfficerIdController.text.isEmpty ||
-          _receivingOfficerNameController.text.isEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please fill all bank details'),
-            backgroundColor: Colors.red,
-          ),
-        );
+    // Check if location is available
+    if (_currentPosition == null) {
+      try {
+        // Try to get current location if not available
+        await _getCurrentLocation();
+        if (_currentPosition == null) {
+          _showErrorSnackBar(
+              'Unable to get location. Please ensure GPS is enabled and try again.');
+          return;
+        }
+      } catch (e) {
+        _showErrorSnackBar('Location error: ${e.toString()}');
         return;
       }
     }
@@ -948,209 +1060,23 @@ class _InTransitDetailState extends State<InTransitDetail> {
     setState(() => _isSubmitting = true);
 
     try {
-      final userId = _storage.read('user_id');
-      final userName = _storage.read('user_name');
+      final response = await _requisitionsService.confirmDelivery(
+        widget.requisition.id.toString(),
+        bankDetails: _isVaultDelivery ? _buildBankDetails() : null,
+        latitude: _currentPosition!.latitude,
+        longitude: _currentPosition!.longitude,
+        notes: _notesController.text.trim(),
+      );
 
-      if (userId == null || userName == null) {
-        try {
-          final authService = AuthService();
-          await authService.refreshToken();
-
-          final newUserId = _storage.read('user_id');
-          final newUserName = _storage.read('user_name');
-
-          if (newUserId == null || newUserName == null) {
-            throw Exception('User information not found after token refresh');
-          }
-
-          await _completeDeliveryWithUser(newUserId, newUserName);
-        } catch (e, stackTrace) {
-          print('=== UI Layer: Complete Delivery Error ===');
-          print('Error type: ${e.runtimeType}');
-          print('Error message: $e');
-          print('Stack trace: $stackTrace');
-          
-          if (mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => AlertDialog(
-                title: Row(
-                  children: [
-                    Icon(Icons.warning_amber_rounded, color: Colors.orange),
-                    SizedBox(width: 8),
-                    Text('Session Expired'),
-                  ],
-                ),
-                content: Text(
-                    'Your session has expired. Please login again to continue.'),
-                actions: [
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('Cancel'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      Navigator.of(context).pushNamedAndRemoveUntil(
-                        '/login',
-                        (route) => false,
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text('Login Again'),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-        return;
-      }
-
-      await _completeDeliveryWithUser(userId, userName);
-    } catch (e, stackTrace) {
-      print('=== UI Layer: Complete Delivery Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
-      
-      if (mounted) {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(Icons.error_outline, color: Colors.red),
-                SizedBox(width: 8),
-                Text('Error'),
-              ],
-            ),
-            content: Text('Failed to complete delivery: ${e.toString()}'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('OK'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _completeDelivery();
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text('Retry'),
-              ),
-            ],
-          ),
-        );
-      }
+      print('Delivery completion response: ${response.toJson()}');
+      await _handleDeliverySuccess();
+    } catch (e) {
+      print('=== Delivery Completion Error ===');
+      print('Error: $e');
+      await _handleDeliveryError(e);
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
-      }
-    }
-  }
-
-  Future<void> _completeDeliveryWithUser(int userId, String userName) async {
-    print('=== UI Layer: Complete Delivery Debug ===');
-    print('Request ID type: ${widget.requisition.id.runtimeType}');
-    print('Request ID value: ${widget.requisition.id}');
-    print('User ID: $userId');
-    print('User Name: $userName');
-    print('Is Vault Delivery: $_isVaultDelivery');
-    print('Is Bank Details Expanded: $_isBankDetailsExpanded');
-
-    // Ensure requestId is a string
-    final requestId = widget.requisition.id.toString();
-    print('Parsed Request ID type: ${requestId.runtimeType}');
-    print('Parsed Request ID value: $requestId');
-
-    final deliveryData = {
-      'requestId': requestId,
-      'status': 'completed',
-      'completedById': userId,
-      'completedByName': userName,
-      'sealNumber': _sealNumberController.text.trim(),
-      'photoUrl': _imageUrl,
-      'latitude': _currentPosition?.latitude,
-      'longitude': _currentPosition?.longitude,
-      'locationHistory': _locationHistory
-          .map((pos) => {
-                'latitude': pos.latitude,
-                'longitude': pos.longitude,
-                'timestamp': pos.timestamp?.toIso8601String(),
-              })
-          .toList(),
-      'notes': _notesController.text.trim(),
-      'isVaultDelivery': _isVaultDelivery,
-      'receivingOfficerName': _receivingOfficerNameController.text.trim(),
-      'receivingOfficerId':
-          int.tryParse(_receivingOfficerIdController.text.trim()),
-      if (_isVaultDelivery && _isBankDetailsExpanded) ...{
-        'bankDetails': {
-          'bankName': _bankNameController.text.trim(),
-          'bankAddress': _bankAddressController.text.trim(),
-          'receivingOfficerId':
-              int.tryParse(_receivingOfficerIdController.text.trim()),
-          'receivingOfficerName': _receivingOfficerNameController.text.trim(),
-          'receivingOfficerPhone': _receivingOfficerPhoneController.text.trim(),
-        },
-      },
-    };
-
-    print('Delivery Data: $deliveryData');
-
-    // Stop location tracking before completing delivery
-    await _locationService.stopTracking();
-
-    try {
-      if (_isVaultDelivery) {
-        print('Calling completeVaultDelivery...');
-        await _requisitionsService.completeVaultDelivery(
-          requestId,
-          isVaultDelivery: true,
-          photoUrl: deliveryData['photoUrl'] as String?,
-          bankDetails: deliveryData['bankDetails'] as Map<String, dynamic>?,
-          latitude: deliveryData['latitude'] as double?,
-          longitude: deliveryData['longitude'] as double?,
-          notes: deliveryData['notes'] as String?,
-        );
-      } else {
-        print('Calling completeRequisition...');
-        await _requisitionsService.completeRequisition(
-          requestId,
-          photoUrl: deliveryData['photoUrl'] as String?,
-          bankDetails: deliveryData['bankDetails'] as Map<String, dynamic>?,
-          latitude: deliveryData['latitude'] as double?,
-          longitude: deliveryData['longitude'] as double?,
-          notes: deliveryData['notes'] as String?,
-        );
-      }
-
-      if (mounted) {
-        Navigator.of(context).pop(true);
-      }
-    } catch (e, stackTrace) {
-      print('=== UI Layer: Complete Delivery Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Failed to complete delivery: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
       }
     }
   }

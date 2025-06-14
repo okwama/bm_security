@@ -16,6 +16,7 @@ Request _$RequestFromJson(Map<String, dynamic> json) => Request(
           unknownValue: Status.pending),
       priority: $enumDecode(_$PriorityEnumMap, json['priority'],
           unknownValue: Priority.medium),
+      myStatus: (json['myStatus'] as num?)?.toInt() ?? 0,
       createdAt: Request._dateFromJson(json['createdAt']),
       serviceType: json['serviceType'],
       serviceTypeId: (json['serviceTypeId'] as num?)?.toInt(),
@@ -26,6 +27,10 @@ Request _$RequestFromJson(Map<String, dynamic> json) => Request(
       branch: json['branch'] == null
           ? null
           : Branch.fromJson(json['branch'] as Map<String, dynamic>),
+      deliveryCompletion: json['deliveryCompletion'] == null
+          ? null
+          : DeliveryCompletion.fromJson(
+              json['deliveryCompletion'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$RequestToJson(Request instance) => <String, dynamic>{
@@ -37,12 +42,14 @@ Map<String, dynamic> _$RequestToJson(Request instance) => <String, dynamic>{
       'pickupDate': Request._dateToJson(instance.pickupDate),
       'status': _$StatusEnumMap[instance.status]!,
       'priority': _$PriorityEnumMap[instance.priority]!,
+      'myStatus': instance.myStatus,
       'createdAt': Request._dateToJson(instance.createdAt),
       'serviceType': instance.serviceType,
       'serviceTypeId': instance.serviceTypeId,
       if (instance.cashCount case final value?) 'cashCount': value,
       if (instance.cashImageUrl case final value?) 'cashImageUrl': value,
       if (instance.branch case final value?) 'branch': value,
+      'deliveryCompletion': instance.deliveryCompletion,
     };
 
 const _$StatusEnumMap = {

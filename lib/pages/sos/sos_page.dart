@@ -6,6 +6,7 @@ import 'package:bm_security/services/sos_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:bm_security/pages/sos/emergency_details_page.dart';
+import '../../../components/loading_spinner.dart';
 
 class SOSPage extends StatefulWidget {
   const SOSPage({super.key});
@@ -42,11 +43,32 @@ class _SOSPageState extends State<SOSPage> {
 
   void _loadUserData() {
     final box = GetStorage();
-    final user = box.read('user');
+    // Try to get user data from different possible storage keys
+    final user = box.read('user') ?? box.read('user_data');
+
+    print('=== Loading User Data ===');
+    print('Raw user data from storage: $user');
+
     if (user != null && user is Map<String, dynamic>) {
+      final id = user['id'] ?? user['user_id'];
+      final name = user['name'] ?? user['user_name'];
+
+      print('Extracted values:');
+      print('ID: $id (${id.runtimeType})');
+      print('Name: $name (${name.runtimeType})');
+
       setState(() {
-        _userData = user;
+        _userData = {
+          'id': int.tryParse((id ?? '').toString()) ?? 0,
+          'name': name ?? '',
+        };
       });
+      print('Processed user data: $_userData');
+    } else {
+      print('No user data found in storage');
+      print('Storage contents: ${box.read('user')}');
+      print('Storage contents (user_data): ${box.read('user_data')}');
+      _showErrorDialog("User information not found. Please log in again.");
     }
   }
 
@@ -122,8 +144,25 @@ class _SOSPageState extends State<SOSPage> {
       return;
     }
 
+    // Validate user data with detailed logging
+    print('=== Validating User Data for SOS ===');
+    print('User data: $_userData');
+
     if (_userData == null) {
+      print('User data is null');
       _showErrorDialog("User information not found. Please log in again.");
+      return;
+    }
+
+    if (_userData!['id'] == 0) {
+      print('Invalid user ID: ${_userData!['id']}');
+      _showErrorDialog("Invalid user ID. Please log in again.");
+      return;
+    }
+
+    if (_userData!['name'].isEmpty) {
+      print('Empty user name');
+      _showErrorDialog("User name is missing. Please log in again.");
       return;
     }
 
@@ -133,14 +172,14 @@ class _SOSPageState extends State<SOSPage> {
     setState(() => _isLoading = true);
 
     try {
+      print('Sending SOS with user data:');
+      print('User ID: ${_userData!['id']}');
+      print('User Name: ${_userData!['name']}');
+
       await SosService.sendSOS(
-        userId: _userData!['id'],
-        userName: _userData!['name'],
-        userPhone: _userData!['phoneNumber'],
-        distressType: _selectedDistressType!,
         latitude: _currentPosition!.latitude,
         longitude: _currentPosition!.longitude,
-        address: _currentAddress,
+        distressType: _selectedDistressType!,
       );
       _showSuccessDialog(
         "SOS alert sent successfully!\n\n"
@@ -148,6 +187,7 @@ class _SOSPageState extends State<SOSPage> {
         "Please stay calm and wait for assistance.",
       );
     } catch (e) {
+      print('SOS Error: $e');
       _showErrorDialog(
           "Failed to send SOS. Please try again or contact emergency services directly.");
     } finally {
@@ -298,27 +338,9 @@ class _SOSPageState extends State<SOSPage> {
         backgroundColor: Colors.red,
       ),
       body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(color: Colors.red),
-                  SizedBox(height: 20),
-                  Text(
-                    'Sending SOS Alert...',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Please wait while we notify emergency services',
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
-            )
+          ? const LoadingSpinner.fullScreen(
+              message:
+                  'Sending SOS Alert...\nPlease wait while we notify emergency services')
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.all(16.0),

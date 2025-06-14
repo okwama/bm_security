@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:bm_security/utils/auth_config.dart';
+import '../../components/loading_spinner.dart';
 
 class MyTeamPage extends StatefulWidget {
   const MyTeamPage({super.key});
@@ -39,7 +40,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
       }
 
       final response = await http.get(
-        Uri.parse('$_baseUrl/assigned-staff'),
+        Uri.parse('$_baseUrl/teams/my-team'),
         headers: {
           'Authorization': 'Bearer $token',
           'Content-Type': 'application/json',
@@ -49,11 +50,14 @@ class _MyTeamPageState extends State<MyTeamPage> {
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         setState(() {
-          _teamMembers = data['assignedStaff'];
+          _teamMembers = (data['assignedStaff'] ?? []) as List;
           _isLoading = false;
         });
       } else {
-        throw Exception('Failed to load team members');
+        setState(() {
+          _error = 'Failed to load team members: ${response.statusCode}';
+          _isLoading = false;
+        });
       }
     } catch (e) {
       setState(() {
@@ -68,6 +72,8 @@ class _MyTeamPageState extends State<MyTeamPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('My Team'),
+        backgroundColor: const Color.fromARGB(255, 12, 90, 153),
+        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -85,9 +91,8 @@ class _MyTeamPageState extends State<MyTeamPage> {
 
   Widget _buildBody() {
     if (_isLoading) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
+      return const LoadingSpinner.fullScreen(
+          message: 'Loading team members...');
     }
 
     if (_error != null) {
@@ -213,7 +218,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                         child: Text(
                           member['name'] ?? 'Unknown',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: Color.fromARGB(255, 255, 255, 255),
                             fontWeight: FontWeight.bold,
                             fontSize: 14,
                           ),
@@ -230,39 +235,46 @@ class _MyTeamPageState extends State<MyTeamPage> {
                 flex: 2,
                 child: Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     borderRadius: const BorderRadius.vertical(
                       bottom: Radius.circular(12),
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        member['role'] ?? 'Not specified',
-                        style: TextStyle(
-                          color: Theme.of(context).primaryColor,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
+                  child: Center(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildRoleBadge(member['role']),
+                          const SizedBox(height: 2),
+                          Text(
+                            member['teamName'] ?? 'No Team',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            member['emplNo'] ?? 'Not specified',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Colors.black,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        member['emplNo'] ?? 'Not specified',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                    ),
                   ),
                 ),
               ),
@@ -270,6 +282,25 @@ class _MyTeamPageState extends State<MyTeamPage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildRoleBadge(String? role) {
+    if (role == null) return SizedBox.shrink();
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        role,
+        style: TextStyle(
+          color: Theme.of(context).primaryColor,
+          fontSize: 12,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 }

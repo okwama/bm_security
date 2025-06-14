@@ -58,18 +58,32 @@ class MainActivity: FlutterActivity() {
             .setRequiresCharging(false)
             .build()
 
+        // Use a shorter interval for more frequent updates
         val workRequest = PeriodicWorkRequestBuilder<LocationWorker>(
-            15, TimeUnit.MINUTES,
-            5, TimeUnit.MINUTES
+            5, TimeUnit.MINUTES,  // Repeat every 5 minutes
+            1, TimeUnit.MINUTES   // Flex interval of 1 minute
         )
             .setConstraints(constraints)
+            .setBackoffCriteria(
+                BackoffPolicy.LINEAR,
+                WorkRequest.MIN_BACKOFF_MILLIS,
+                TimeUnit.MILLISECONDS
+            )
+            .addTag("location_tracking")
             .build()
 
+        // Cancel any existing work
+        WorkManager.getInstance(applicationContext)
+            .cancelAllWorkByTag("location_tracking")
+
+        // Enqueue the new work
         WorkManager.getInstance(applicationContext)
             .enqueueUniquePeriodicWork(
                 "location_work",
                 ExistingPeriodicWorkPolicy.REPLACE,
                 workRequest
             )
+
+        Log.d(TAG, "WorkManager initialized with 5-minute interval")
     }
 }

@@ -1,9 +1,6 @@
-import 'package:bm_security/services/location_service.dart';
 import 'package:flutter/material.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/intl.dart';
-import 'package:geolocator/geolocator.dart';
-import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -15,6 +12,13 @@ import '../../../services/requisitions/requisitions_service.dart';
 import '../../../widgets/cash_count_dialog.dart';
 import '../../../pages/requisitions/cashCount_page.dart';
 import '../../../utils/auth_config.dart';
+import '../../../components/loading_spinner.dart';
+import 'process/pickandDrop.dart';
+import 'process/bssSlip.dart';
+import 'process/cdmCollection.dart';
+import 'process/atmCollection.dart';
+import 'process/bssVault.dart';
+import '../../../utils/date_formatter.dart';
 
 class RequisitionDetail extends StatefulWidget {
   final Request request;
@@ -26,22 +30,14 @@ class RequisitionDetail extends StatefulWidget {
 }
 
 class _RequisitionDetailState extends State<RequisitionDetail> {
-  final RequisitionsService _requisitionsService = RequisitionsService();
-  final LocationService _locationService = LocationService();
-  Timer? _locationTimer;
   final storage = GetStorage();
 
   bool _isLoading = false;
   bool _showSuccess = false;
-  bool _trackingInitialized = false;
-  final String _baseUrl = ApiConfig.baseUrl;
-  String? _authToken;
 
   @override
   void initState() {
     super.initState();
-    _authToken = storage.read('token');
-    // Debug: Print request data when widget is first built
     debugPrint('Request data: ${widget.request.toJson()}');
     debugPrint('serviceTypeId: ${widget.request.serviceTypeId}');
     debugPrint('serviceType: ${widget.request.serviceType}');
@@ -49,110 +45,103 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
 
   @override
   void dispose() {
-    // Don't stop tracking here, let it continue to in-transit
-    _locationTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _confirmPickup() async {
-    // Debug: Print service type info when pickup is confirmed
     debugPrint(
         'Confirming pickup - serviceTypeId: ${widget.request.serviceTypeId}, serviceType: ${widget.request.serviceType}');
 
-    // For BSS service type (ID: 2), navigate to CashCountPage
-    if (widget.request.serviceTypeId == 2) {
-      try {
-        final cashCount = await Navigator.push<CashCount>(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CashCountPage(
-              onConfirm: (cashCount) {
-                Navigator.of(context).pop(cashCount);
-              },
+    final bool? confirm = await _showConfirmationDialog();
+    if (confirm != true) return;
+
+    if (!mounted) return;
+    setState(() => _isLoading = true);
+
+    try {
+      bool? result;
+      switch (widget.request.serviceTypeId) {
+        case 1:
+          result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => PickAndDrop(requisition: widget.request),
             ),
-          ),
-        );
+          );
+          break;
+        case 2:
+          result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BssSlip(requisition: widget.request),
+            ),
+          );
+          break;
+        case 3:
+          result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CdmCollection(requisition: widget.request),
+            ),
+          );
+          break;
+        case 4:
+          result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => AtmCollection(requisition: widget.request),
+            ),
+          );
+          break;
+        case 5:
+          result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => BssVault(requisition: widget.request),
+            ),
+          );
+          break;
+        default:
+          _showError('Unknown service type');
+          break;
+      }
 
-        if (cashCount == null) return; // User cancelled
-        if (!mounted) return;
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          // Only show success if actual changes were made
+          _showSuccess = result == true;
+        });
 
-        setState(() => _isLoading = true);
-
-        try {
-          // Upload image if exists
-          if (cashCount.imagePath != null) {
-            try {} catch (e) {
-              debugPrint('Error uploading image: $e');
-              // Continue without image if upload fails
-            }
-          }
-
-          // Call API to confirm pickup with cash count details
-          await _requisitionsService.confirmPickup(
-            widget.request.id,
-            cashCount: cashCount,
+        // Only show success message and navigate if actual changes were made
+        if (result == true) {
+          // Show success message
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Pickup confirmed successfully'),
+                ],
+              ),
+              backgroundColor: Colors.green[600],
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
           );
 
-          // Start location tracking if not already tracking
-          if (!_locationService
-              .isTrackingRequest(widget.request.id.toString())) {
-            await _initializeLocationTracking();
-          }
-
-          if (mounted) {
-            setState(() {
-              _isLoading = false;
-              _showSuccess = true;
-            });
-            await Future.delayed(const Duration(milliseconds: 1500));
-            if (mounted) {
-              Navigator.of(context).pop(true);
-            }
-          }
-        } catch (e) {
-          if (mounted) {
-            setState(() => _isLoading = false);
-            _showError(_getErrorMessage(e));
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          _showError('Failed to open cash count form');
+          // Navigate back to pending page with success indicator
+          Navigator.of(context).pop(true);
+        } else {
+          // Just pop without success indicator if no changes were made
+          Navigator.of(context).pop();
         }
       }
-    } else {
-      // Original flow for non-BSS service types
-      final bool? confirm = await _showConfirmationDialog();
-      if (confirm != true) return;
-
+    } catch (e) {
       if (!mounted) return;
-      setState(() => _isLoading = true);
-
-      try {
-        await _requisitionsService.confirmPickup(widget.request.id);
-
-        // Start location tracking if not already tracking
-        if (!_locationService.isTrackingRequest(widget.request.id.toString())) {
-          await _initializeLocationTracking();
-        }
-
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _showSuccess = true;
-          });
-          await Future.delayed(const Duration(milliseconds: 1500));
-          if (mounted) {
-            Navigator.pop(context, true);
-          }
-        }
-      } catch (e) {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          _showError(_getErrorMessage(e));
-        }
-      }
+      setState(() => _isLoading = false);
+      _showError(_getErrorMessage(e));
     }
   }
 
@@ -160,15 +149,28 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
     return showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Confirm Pickup'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.qr_code_scanner, color: Color.fromARGB(255, 12, 90, 153)),
+            SizedBox(width: 8),
+            Text('Confirm Pickup'),
+          ],
+        ),
         content: const Text('Are you sure you want to confirm this pickup?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
           ),
-          TextButton(
+          ElevatedButton(
             onPressed: () => Navigator.of(context).pop(true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue[600],
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+            ),
             child: const Text('Confirm'),
           ),
         ],
@@ -190,293 +192,483 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
   void _showError(String message) {
     if (!mounted) return;
 
-    // Extract the actual error message if it's in the format 'statusCode: message'
     final errorMessage = message.contains(': ')
         ? message.split(': ').sublist(1).join(': ')
         : message;
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Error: $errorMessage'),
-        backgroundColor: Colors.red,
+        content: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.white),
+            const SizedBox(width: 8),
+            Expanded(child: Text('Error: $errorMessage')),
+          ],
+        ),
+        backgroundColor: Colors.red[600],
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
           label: 'Dismiss',
           textColor: Colors.white,
-          onPressed: () {
-            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-          },
+          onPressed: () => ScaffoldMessenger.of(context).hideCurrentSnackBar(),
         ),
       ),
     );
   }
 
-  Future<void> _initializeLocationTracking() async {
-    if (_trackingInitialized) return;
-
-    try {
-      // Initialize location service with auth token
-      if (_authToken == null) {
-        _authToken = storage.read('token');
-        if (_authToken == null) {
-          throw Exception('Authentication token not found');
-        }
+  Color _getStatusColor(Status status) {
+    switch (status) {
+      case Status.pending:
+        return Colors.orange;
+      case Status.inProgress:
+        return Colors.blue;
+      case Status.completed:
+        return Colors.green;
+      case Status.cancelled:
+        return Colors.red;
       }
-
-      // Start background location tracking
-      final success = await _locationService.initialize(authToken: _authToken!);
-      if (!success) {
-        throw Exception('Failed to initialize location tracking');
-      }
-
-      // Start tracking for this request
-      await _locationService.startTracking(widget.request.id.toString());
-
-      _trackingInitialized = true;
-      debugPrint('Location tracking started for request ${widget.request.id}');
-    } catch (e) {
-      debugPrint('Location tracking error: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Location tracking error: $e')),
-        );
-      }
-    }
   }
 
-  Future<void> _sendInitialPosition() async {
-    try {
-      final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium,
-      );
-      await _sendLocationToServer(position);
-    } catch (e) {
-      debugPrint('Initial location error: $e');
-    }
-  }
-
-  void _startPeriodicLocationUpdates() {
-    debugPrint('Starting location updates...');
-    _locationTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
-      try {
-        final position = await Geolocator.getLastKnownPosition() ??
-            await Geolocator.getCurrentPosition(
-              desiredAccuracy: LocationAccuracy.medium,
-            );
-        await _sendLocationToServer(position);
-      } catch (e) {
-        debugPrint('Periodic location error: $e');
-      }
-    });
-  }
-
-  Future<void> _sendLocationToServer(Position position) async {
-    final token = storage.read('token');
-    final body = jsonEncode({
-      'requestId': widget.request.id,
-      'latitude': position.latitude,
-      'longitude': position.longitude,
-    });
-
-    try {
-      final response = await http
-          .post(
-            Uri.parse('$_baseUrl/locations'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token',
-            },
-            body: body,
-          )
-          .timeout(const Duration(seconds: 10));
-
-      debugPrint("Location sent: $body");
-
-      if (response.statusCode != 201) {
-        debugPrint('Server rejected location: ${response.body}');
-      }
-    } catch (e) {
-      debugPrint('Failed to send location: $e');
-    }
-  }
-
-  Widget _buildInfoCard() {
-    return Card(
+  Widget _buildHeader() {
+    return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildInfoRow('Service Type', widget.request.serviceType),
-            if (widget.request.cashCount != null) ...[
-              const Divider(),
-              const Text('Cash Count Details',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              _buildInfoRow('50s',
-                  '${widget.request.cashCount!.fifties} × 50 = KES ${widget.request.cashCount!.fifties * 50}'),
-              _buildInfoRow('100s',
-                  '${widget.request.cashCount!.hundreds} × 100 = KES ${widget.request.cashCount!.hundreds * 100}'),
-              _buildInfoRow('200s',
-                  '${widget.request.cashCount!.twoHundreds} × 200 = KES ${widget.request.cashCount!.twoHundreds * 200}'),
-              _buildInfoRow('500s',
-                  '${widget.request.cashCount!.fiveHundreds} × 500 = KES ${widget.request.cashCount!.fiveHundreds * 500}'),
-              _buildInfoRow('1000s',
-                  '${widget.request.cashCount!.thousands} × 1000 = KES ${widget.request.cashCount!.thousands * 1000}'),
-              const Divider(),
-              _buildInfoRow(
-                  'Total Amount', 'KES ${widget.request.cashCount!.total}'),
-              if (widget.request.cashCount!.sealNumber != null)
-                _buildInfoRow(
-                    'Seal Number', widget.request.cashCount!.sealNumber!),
-              if (widget.request.cashImageUrl != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text('Sealed Bag Image:',
-                          style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 8),
-                      Image.network(
-                        widget.request.cashImageUrl!,
-                        height: 150,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) =>
-                            const Text('Failed to load image'),
-                      ),
-                    ],
-                  ),
-                ),
-              const Divider(),
-            ],
-            _buildInfoRow('Pickup Location',
-                widget.request.pickupLocation ?? 'Not specified'),
-            _buildInfoRow('Delivery Location',
-                widget.request.deliveryLocation ?? 'Not specified'),
-            if (widget.request.pickupDate != null)
-              _buildInfoRow(
-                'Pickup Date',
-                DateFormat('MMM dd, yyyy hh:mm a')
-                    .format(widget.request.pickupDate!),
-              ),
-            _buildInfoRow(
-              'Status',
-              widget.request.status.toString().split('.').last,
-            ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [
+             Color.fromARGB(255, 12, 90, 153),
+            Color.fromARGB(255, 12, 90, 153)
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blue.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6.0),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 120,
-            child: Text(label,
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.grey)),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  widget.request.serviceType,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color:
+                      _getStatusColor(widget.request.status).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color:
+                        _getStatusColor(widget.request.status).withOpacity(0.5),
+                  ),
+                ),
+                child: Text(
+                  widget.request.status
+                      .toString()
+                      .split('.')
+                      .last
+                      .toUpperCase(),
+                  style: TextStyle(
+                    color: _getStatusColor(widget.request.status),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ],
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 16))),
+          if (widget.request.pickupDate != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                const Icon(Icons.schedule, color: Colors.white70, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  DateFormat('MMM dd, yyyy • hh:mm a')
+                      .format(widget.request.pickupDate!),
+                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
   }
 
-  // Widget _buildActionButtons() {
-  //   return Column(
-  //     children: [
-  //       if (widget.request.status == Status.pending)
-  //         ElevatedButton.icon(
-  //           icon: const Icon(Icons.qr_code_scanner),
-  //           label: const Text("Confirm Pickup"),
-  //           style: ElevatedButton.styleFrom(
-  //             minimumSize: const Size.fromHeight(50),
-  //           ),
-  //           onPressed: _isLoading ? null : _confirmPickup,
-  //         ),
-  //       if (_isLoading)
-  //         const Padding(
-  //           padding: EdgeInsets.all(16.0),
-  //           child: CircularProgressIndicator(),
-  //         ),
-  //       if (_showSuccess)
-  //         Container(
-  //           margin: const EdgeInsets.only(top: 16),
-  //           padding: const EdgeInsets.all(16.0),
-  //           decoration: BoxDecoration(
-  //             color: Colors.green.withOpacity(0.1),
-  //             borderRadius: BorderRadius.circular(8),
-  //           ),
-  //           child: Row(
-  //             mainAxisAlignment: MainAxisAlignment.center,
-  //             children: [
-  //               Icon(Icons.check_circle, color: Colors.green[700]),
-  //               const SizedBox(width: 8),
-  //               const Text(
-  //                 'Pickup confirmed',
-  //                 style: TextStyle(fontWeight: FontWeight.bold),
-  //               ),
-  //             ],
-  //           ),
-  //         ),
-  //     ],
-  //   );
-  // }
-// Replace your _buildActionButtons method with this temporarily:
-
-  Widget _buildActionButtons() {
-    return Column(
-      children: [
-        // Show success message at the top for better visibility
-        if (_showSuccess)
+  Widget _buildLocationCard() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _buildLocationItem(
+            icon: Icons.location_on,
+            iconColor: Colors.green,
+            title: 'Pickup Location',
+            location: widget.request.pickupLocation ?? 'Not specified',
+            isFirst: true,
+          ),
           Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(20.0),
+            height: 1,
+            margin: const EdgeInsets.symmetric(horizontal: 56),
+            color: Colors.grey[200],
+          ),
+          _buildLocationItem(
+            icon: Icons.flag,
+            iconColor: Colors.red,
+            title: 'Delivery Location',
+            location: widget.request.deliveryLocation ?? 'Not specified',
+            isFirst: false,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationItem({
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String location,
+    required bool isFirst,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.green,
+              color: iconColor.withOpacity(0.1),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            child: Icon(icon, color: iconColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.check_circle, color: Colors.white, size: 24),
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey[600],
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  location,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCashCountCard() {
+    if (widget.request.cashCount == null) return const SizedBox.shrink();
+
+    final cashCount = widget.request.cashCount!;
+    final denominations = [
+      {'value': 50, 'count': cashCount.fifties},
+      {'value': 100, 'count': cashCount.hundreds},
+      {'value': 200, 'count': cashCount.twoHundreds},
+      {'value': 500, 'count': cashCount.fiveHundreds},
+      {'value': 1000, 'count': cashCount.thousands},
+    ];
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(Icons.account_balance_wallet,
+                      color: Colors.green, size: 20),
+                ),
                 const SizedBox(width: 12),
                 const Text(
-                  'Pickup confirmed successfully!',
+                  'Cash Count Details',
                   style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    fontSize: 16,
+                    color: Colors.black87,
                   ),
                 ),
               ],
             ),
           ),
 
-        if (widget.request.status == Status.pending)
-          ElevatedButton.icon(
-            icon: const Icon(Icons.qr_code_scanner),
-            label: const Text("Confirm Pickup"),
-            style: ElevatedButton.styleFrom(
-              minimumSize: const Size.fromHeight(50),
+          // Denominations Grid
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 3,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 8,
+              ),
+              itemCount: denominations.length,
+              itemBuilder: (context, index) {
+                final denom = denominations[index];
+                final value = denom['value'] as int;
+                final count = denom['count'] as int;
+                final total = value * count;
+
+                return Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'KES $value',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      Text(
+                        '$count × $value = KES $total',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
-            onPressed: _isLoading ? null : _confirmPickup,
           ),
 
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(16.0),
+          // Total and Seal
+          Container(
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.green[200]!),
+            ),
             child: Column(
               children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 8),
-                Text('Processing pickup...'),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Total Amount',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    Text(
+                      'KES ${NumberFormat('#,###').format(cashCount.totalAmount)}',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.green[700],
+                      ),
+                    ),
+                  ],
+                ),
+                if (cashCount.sealNumber != null) ...[
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.security, size: 16, color: Colors.grey[600]),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Seal: ${cashCount.sealNumber}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Cash Image
+          if (widget.request.cashImageUrl != null)
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Sealed Bag Image',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(
+                      widget.request.cashImageUrl!,
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => Container(
+                        height: 150,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Center(
+                          child: Text('Failed to load image'),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionButtons() {
+    return Column(
+      children: [
+        if (_showSuccess)
+          Container(
+            margin: const EdgeInsets.only(bottom: 16),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.green[50],
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: Colors.green[200]!),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Icon(Icons.check, color: Colors.white, size: 16),
+                ),
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    'Pickup confirmed successfully!',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      color: Colors.green,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        if (widget.request.status == Status.pending && !_isLoading)
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.qr_code_scanner),
+              label: const Text(
+                'Confirm Pickup',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color.fromARGB(255, 12, 90, 153),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                elevation: 2,
+              ),
+              onPressed: _confirmPickup,
+            ),
+          ),
+        if (_isLoading)
+          Container(
+            padding: const EdgeInsets.all(20),
+            child: const Column(
+              children: [
+                LoadingSpinner.button(message: 'Processing pickup...'),
               ],
             ),
           ),
@@ -487,15 +679,23 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text(widget.request.serviceType),
+        title: const Text('Requisition Details'),
+        backgroundColor: const Color.fromARGB(255, 12, 90, 153),
+        foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+        elevation: 0,
         centerTitle: true,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            _buildInfoCard(),
+            _buildHeader(),
+            _buildLocationCard(),
+            _buildCashCountCard(),
+            const SizedBox(height: 8),
             _buildActionButtons(),
           ],
         ),

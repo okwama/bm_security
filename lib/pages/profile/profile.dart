@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'dart:async';
+import '../../components/loading_spinner.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -148,7 +149,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
         ),
         if (controller.isLoading.value)
           const Positioned.fill(
-            child: CircularProgressIndicator(),
+            child: LoadingSpinner.fullScreen(message: 'Loading profile...'),
           ),
         Positioned(
           right: 0,
@@ -178,9 +179,7 @@ class _ProfilePageState extends State<ProfilePage> with WidgetsBindingObserver {
   }
 
   Widget _buildRoleBadge() {
-    final String role = controller.profile.value?.role?.isEmpty == true
-        ? 'User'
-        : controller.profile.value!.role!;
+    final String role = controller.profile.value?.role ?? 'User';
 
     final Color badgeColor =
         role.toLowerCase() == 'supervisor' || role.toLowerCase() == 'admin'

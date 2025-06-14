@@ -5,6 +5,8 @@ import 'package:bm_security/services/api_service.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:bm_security/controllers/auth_controller.dart';
 import 'package:get_storage/get_storage.dart';
+import '../../components/loading_spinner.dart';
+import 'package:bm_security/services/location_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -54,14 +56,22 @@ class _LoginPageState extends State<LoginPage> {
       );
 
       if (result['success']) {
-        // Store tokens and user data
-        final storage = GetStorage();
-        storage.write('token', result['data']['token']);
-        storage.write('refresh_token', result['data']['refresh_token']);
-        storage.write('user_id', result['data']['user']['id']);
-        storage.write('user_name', result['data']['user']['name']);
+        _authController.isAuthenticated = true;
 
-        _authController.isLoggedIn.value = true;
+        // Initialize location service with auto backup
+        try {
+          debugPrint('🚀 Initializing location service with auto backup');
+          final locationService = LocationService();
+          final initialized = await locationService.initializeWithAutoBackup();
+          if (initialized) {
+            debugPrint('✅ Location service initialized successfully');
+          } else {
+            debugPrint('⚠️ Location service initialization failed');
+          }
+        } catch (e) {
+          debugPrint('⚠️ Could not initialize location service: $e');
+        }
+
         Get.offAllNamed('/home');
         _showToast('Login successful', false);
       } else {
@@ -251,10 +261,7 @@ class _LoginPageState extends State<LoginPage> {
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(
-                  color: Colors.white,
-                  strokeWidth: 2.5,
-                ),
+                child: LoadingSpinner.button(),
               )
             : const Text(
                 'SIGN IN',

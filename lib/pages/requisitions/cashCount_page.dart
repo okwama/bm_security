@@ -12,7 +12,7 @@ class CashCountPage extends StatefulWidget {
 
 class _CashCountPageState extends State<CashCountPage> {
   final _formKey = GlobalKey<FormState>();
-  final _sealNumberController = TextEditingController();
+  bool _isSubmitting = false;
 
   // Denomination data structure in reverse order (highest to lowest)
   final Map<String, DenominationData> _denominations = {
@@ -41,7 +41,6 @@ class _CashCountPageState extends State<CashCountPage> {
   // Fixed total calculation
   int get total {
     return _denominations.values.fold(0, (sum, denomination) {
-      // Handle empty strings as 0
       String text = denomination.controller.text.trim();
       int count = (text.isEmpty) ? 0 : (int.tryParse(text) ?? 0);
       return sum + (count * denomination.value);
@@ -58,206 +57,194 @@ class _CashCountPageState extends State<CashCountPage> {
     for (var denomination in _denominations.values) {
       denomination.controller.dispose();
     }
-    _sealNumberController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Cash Count & Bag Sealing'),
-        backgroundColor: Theme.of(context).primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
+  Widget _buildCompactTotalHeader() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.green.shade400, Colors.green.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
       ),
-      body: Form(
-        key: _formKey,
-        child: Column(
-          children: [
-            // Total display at top - sticky
-            Container(
-              width: double.infinity,
-              color: Colors.green.shade50,
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Total Amount',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      child: Row(
+        children: [
+          Icon(
+            Icons.account_balance_wallet,
+            color: Colors.white,
+            size: 24,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Total Amount',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'KES ${total.toStringAsFixed(2)}',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.green.shade700,
-                    ),
+                ),
+                Text(
+                  'KES ${total.toStringAsFixed(2)}',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
                   ),
-                  const SizedBox(height: 8),
-                  // Seal number field moved here
-                  TextFormField(
-                    controller: _sealNumberController,
-                    decoration: InputDecoration(
-                      labelText: 'Seal Number',
-                      labelStyle: const TextStyle(fontSize: 14),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12),
-                      prefixIcon: const Icon(Icons.security, size: 20),
-                      isDense: true,
-                    ),
-                    style: const TextStyle(fontSize: 14),
-                    validator: (value) =>
-                        value?.isEmpty ?? true ? 'Required' : null,
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-            // Divider between sections
-            const Divider(height: 1, thickness: 1),
-            // Scrollable content
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Denomination inputs
-                    const Text(
-                      'Count by Denomination',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildDenominationGrid(),
-                    const SizedBox(height: 32),
-                    // Confirm button section
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _onConfirm,
-                        icon: const Icon(Icons.check_circle, size: 24),
-                        label: const Text(
-                          'CONFIRM CASH COUNT',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          elevation: 2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                  ],
+          ),
+          if (total > 0)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                '${_denominations.values.where((d) => d.controller.text.isNotEmpty).length}/10',
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-          ],
-        ),
+        ],
       ),
     );
   }
 
-  Widget _buildDenominationGrid() {
+  Widget _buildCompactDenominationGrid() {
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        childAspectRatio: 1.2, // Slightly taller for better touch targets
-        crossAxisSpacing: 8,
-        mainAxisSpacing: 8,
-        mainAxisExtent: 100, // Fixed height for each item
+        crossAxisCount: 4,
+        childAspectRatio: 0.85,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
       ),
       itemCount: _denominations.length,
       itemBuilder: (context, index) {
         String key = _denominations.keys.elementAt(index);
         DenominationData denomination = _denominations[key]!;
+        bool hasValue = denomination.controller.text.isNotEmpty;
 
-        return Card(
-          elevation: 0.5,
+        return Container(
+          decoration: BoxDecoration(
+            color: hasValue ? Colors.green.shade50 : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: hasValue ? Colors.green.shade200 : Colors.grey.shade300,
+              width: hasValue ? 1.5 : 1,
+            ),
+            boxShadow: hasValue
+                ? [
+                    BoxShadow(
+                      color: Colors.green.withOpacity(0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
           child: Padding(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(6),
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                // Denomination label
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color:
+                        hasValue ? Colors.green.shade100 : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
                   child: Text(
                     'KES ${denomination.value}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                Flexible(
-                  flex: 2,
-                  child: TextFormField(
-                    controller: denomination.controller,
-                    keyboardType: TextInputType.number,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                    decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 4, vertical: 8),
-                      isDense: true,
-                      hintText: '0',
-                      hintStyle: TextStyle(color: Colors.grey.shade400),
-                    ),
-                    onTap: () {
-                      // Select all text when tapped
-                      denomination.controller.selection = TextSelection(
-                        baseOffset: 0,
-                        extentOffset: denomination.controller.text.length,
-                      );
-                    },
-                    onChanged: (_) => setState(() {}),
-                    validator: (value) {
-                      // Allow empty values and treat them as 0
-                      if (value == null || value.isEmpty) return null;
-                      if (int.tryParse(value) == null) return 'Invalid';
-                      return null;
-                    },
-                  ),
-                ),
-                Flexible(
-                  child: Text(
-                    'KES ${(() {
-                      String text = denomination.controller.text.trim();
-                      int count =
-                          (text.isEmpty) ? 0 : (int.tryParse(text) ?? 0);
-                      return (count * denomination.value).toStringAsFixed(0);
-                    })()}',
                     style: TextStyle(
                       fontSize: 10,
-                      color: Colors.grey.shade600,
+                      fontWeight: FontWeight.w600,
+                      color: hasValue
+                          ? Colors.green.shade800
+                          : Colors.grey.shade700,
                     ),
-                    textAlign: TextAlign.center,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                ),
+                // Input field
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    child: TextFormField(
+                      controller: denomination.controller,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: hasValue
+                            ? Colors.green.shade800
+                            : Colors.grey.shade700,
+                      ),
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(6),
+                          borderSide: BorderSide.none,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey.shade50,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4, vertical: 6),
+                        isDense: true,
+                        hintText: '0',
+                        hintStyle: TextStyle(
+                          color: Colors.grey.shade400,
+                          fontSize: 12,
+                        ),
+                      ),
+                      onTap: () {
+                        denomination.controller.selection = TextSelection(
+                          baseOffset: 0,
+                          extentOffset: denomination.controller.text.length,
+                        );
+                      },
+                      onChanged: (_) => setState(() {}),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) return null;
+                        if (int.tryParse(value) == null) return '';
+                        return null;
+                      },
+                    ),
+                  ),
+                ),
+                // Subtotal
+                Text(
+                  'KES ${(() {
+                    String text = denomination.controller.text.trim();
+                    int count = (text.isEmpty) ? 0 : (int.tryParse(text) ?? 0);
+                    return (count * denomination.value).toStringAsFixed(0);
+                  })()}',
+                  style: TextStyle(
+                    fontSize: 9,
+                    color:
+                        hasValue ? Colors.green.shade600 : Colors.grey.shade500,
+                    fontWeight: hasValue ? FontWeight.w500 : FontWeight.normal,
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
@@ -267,10 +254,147 @@ class _CashCountPageState extends State<CashCountPage> {
     );
   }
 
-  void _onConfirm() {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade50,
+      appBar: AppBar(
+        title: const Text(
+          'Cash Count',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+        ),
+        backgroundColor: Theme.of(context).primaryColor,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ),
+      ),
+      body: Form(
+        key: _formKey,
+        child: Column(
+          children: [
+            // Compact total header
+            _buildCompactTotalHeader(),
+            // Content area
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Section header
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calculate,
+                          size: 18,
+                          color: Colors.grey.shade700,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Count by Denomination',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    // Denomination grid
+                    _buildCompactDenominationGrid(),
+                  ],
+                ),
+              ),
+            ),
+            // Bottom button
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.shade300,
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: _isSubmitting || total <= 0 ? null : _onConfirm,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: Colors.grey.shade300,
+                    disabledForegroundColor: Colors.grey.shade500,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    elevation: total > 0 ? 2 : 0,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (_isSubmitting)
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        )
+                      else
+                        Icon(
+                          total > 0 ? Icons.check_circle : Icons.calculate,
+                          size: 18,
+                        ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _isSubmitting
+                            ? 'SAVING...'
+                            : (total > 0
+                                ? 'CONFIRM CASH COUNT'
+                                : 'ENTER DENOMINATIONS'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _onConfirm() async {
     if (_formKey.currentState?.validate() ?? false) {
-      widget.onConfirm(
-        CashCount(
+      if (!mounted) return;
+      setState(() => _isSubmitting = true);
+
+      try {
+        final cashCount = CashCount(
           ones: _getControllerValue('1'),
           fives: _getControllerValue('5'),
           tens: _getControllerValue('10'),
@@ -281,10 +405,37 @@ class _CashCountPageState extends State<CashCountPage> {
           twoHundreds: _getControllerValue('200'),
           fiveHundreds: _getControllerValue('500'),
           thousands: _getControllerValue('1000'),
-          sealNumber: _sealNumberController.text,
-        ),
-      );
-      Navigator.pop(context);
+        );
+
+        // Call the onConfirm callback with the cash count data
+        widget.onConfirm(cashCount);
+
+        if (!mounted) return;
+
+        // Show success message
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Cash count saved successfully'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 1),
+          ),
+        );
+
+        // Navigate back to parent page with the cash count data
+        Navigator.of(context).pop(cashCount);
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error saving cash count: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
+      }
     }
   }
 }
