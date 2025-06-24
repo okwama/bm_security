@@ -67,7 +67,7 @@ class ProfileController extends GetxController {
         'Error',
         'Failed to fetch profile data: ${e.toString().replaceAll('Exception: ', '')}',
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
     }
@@ -125,7 +125,7 @@ class ProfileController extends GetxController {
         'Error',
         e.toString().replaceAll('Exception: ', ''),
         snackPosition: SnackPosition.TOP,
-        backgroundColor: Get.theme.colorScheme.error.withOpacity(0.1),
+        backgroundColor: Get.theme.colorScheme.error.withValues(alpha: 0.1),
         colorText: Get.theme.colorScheme.error,
       );
     } finally {

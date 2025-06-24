@@ -143,7 +143,7 @@ class _PendingRequisitionsPageState extends State<PendingRequisitionsPage> {
         title: const Text('Pending Requisitions'),
         centerTitle: true,
         backgroundColor: primaryColor,
-        foregroundColor: primaryColor,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),

@@ -1,0 +1,38 @@
+<variant
+    name="release"
+    package="com.bmsecurity.bm"
+    minSdkVersion="21"
+    targetSdkVersion="35"
+    shrinking="true"
+    mergedManifest="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\intermediates\merged_manifest\release\AndroidManifest.xml"
+    manifestMergeReport="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\outputs\logs\manifest-merger-release-report.txt"
+    proguardFiles="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\intermediates\default_proguard_files\global\proguard-android-optimize.txt-8.2.1;C:\flutter\packages\flutter_tools\gradle\flutter_proguard_rules.pro;proguard-rules.pro"
+    partialResultsDir="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\intermediates\lint_vital_partial_results\release\out">
+  <buildFeatures
+      coreLibraryDesugaring="true"
+      namespacing="REQUIRED"/>
+  <sourceProviders>
+    <sourceProvider
+        manifests="src\main\AndroidManifest.xml"
+        javaDirectories="src\main\java;src\release\java;src\main\kotlin;src\release\kotlin"
+        resDirectories="src\main\res;src\release\res"
+        assetsDirectories="src\main\assets;src\release\assets"/>
+  </sourceProviders>
+  <testSourceProviders>
+  </testSourceProviders>
+  <testFixturesSourceProviders>
+  </testFixturesSourceProviders>
+  <manifestPlaceholders>
+    <placeholder
+        name="applicationName"
+        value="android.app.Application" />
+  </manifestPlaceholders>
+  <artifact
+      classOutputs="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\intermediates\javac\release\classes;C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\tmp\kotlin-classes\release;C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\kotlinToolingMetadata;C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\intermediates\compile_and_runtime_not_namespaced_r_class_jar\release\R.jar"
+      type="MAIN"
+      applicationId="com.bmsecurity.bm"
+      generatedSourceFolders="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\generated\ap_generated_sources\release\out;C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\generated\source\buildConfig\release"
+      generatedResourceFolders="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\app\generated\res\resValues\release"
+      desugaredMethodsFiles="C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\c39cc153a320d240f9cf59a5dbced876\transformed\desugar_jdk_libs_configuration-2.0.4-desugar-lint.txt;C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\48c4ace7507c643f698335c183af8a37\transformed\D8BackportedDesugaredMethods.txt">
+  </artifact>
+</variant>

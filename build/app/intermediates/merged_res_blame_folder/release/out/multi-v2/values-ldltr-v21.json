@@ -1,0 +1,19 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.bmsecurity.bm.app-mergeReleaseResources-53:/values-ldltr-v21/values-ldltr-v21.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\Benjamin Okwama\\.gradle\\caches\\transforms-4\\8a8fae886f0beb1852c894aaa73b5059\\transformed\\appcompat-1.1.0\\res\\values-ldltr-v21\\values-ldltr-v21.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endColumns": "112",
+                        "endOffsets": "163"
+                    }
+                }
+            ]
+        }
+    ]
+}

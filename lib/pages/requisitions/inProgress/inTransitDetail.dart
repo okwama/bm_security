@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:geolocator/geolocator.dart';
@@ -29,7 +29,6 @@ class _InTransitDetailState extends State<InTransitDetail> {
   // Bank details form key
   final _bankDetailsFormKey = GlobalKey<FormState>();
 
-  final _sealNumberController = TextEditingController();
   final _bankNameController = TextEditingController();
   final _bankAddressController = TextEditingController();
   final _receivingOfficerIdController = TextEditingController();
@@ -73,7 +72,6 @@ class _InTransitDetailState extends State<InTransitDetail> {
     if (!_isSubmitting) {
       _stopLocationTracking();
     }
-    _sealNumberController.dispose();
     _bankNameController.dispose();
     _bankAddressController.dispose();
     _receivingOfficerIdController.dispose();
@@ -479,8 +477,8 @@ class _InTransitDetailState extends State<InTransitDetail> {
   @override
   Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).primaryColor;
-    final primaryColorLight = primaryColor.withOpacity(0.1);
-    final primaryColorMedium = primaryColor.withOpacity(0.2);
+    final primaryColorLight = primaryColor.withValues(alpha: 0.1);
+    final primaryColorMedium = primaryColor.withValues(alpha: 0.2);
 
     return Scaffold(
       appBar: AppBar(
@@ -490,7 +488,7 @@ class _InTransitDetailState extends State<InTransitDetail> {
         leading: Container(
           margin: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: IconButton(
@@ -729,7 +727,10 @@ class _InTransitDetailState extends State<InTransitDetail> {
                   gradient: LinearGradient(
                     colors: [
                       Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.primary.withOpacity(0.8),
+                      Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -744,7 +745,7 @@ class _InTransitDetailState extends State<InTransitDetail> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -774,7 +775,7 @@ class _InTransitDetailState extends State<InTransitDetail> {
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                           ),
                         ],
@@ -980,7 +981,10 @@ class _InTransitDetailState extends State<InTransitDetail> {
               margin: const EdgeInsets.all(8),
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -995,13 +999,19 @@ class _InTransitDetailState extends State<InTransitDetail> {
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.5),
               ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                color: Theme.of(context)
+                    .colorScheme
+                    .outline
+                    .withValues(alpha: 0.5),
               ),
             ),
             focusedBorder: OutlineInputBorder(

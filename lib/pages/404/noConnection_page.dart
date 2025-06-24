@@ -1,4 +1,4 @@
-// ignore: file_names
+﻿// ignore: file_names
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:bm_security/controllers/auth_controller.dart';
@@ -49,7 +49,7 @@ class NoConnectionPage extends StatelessWidget {
                 Text(
                   message ?? 'Please check your connection and try again.',
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withOpacity(0.7),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -88,3 +88,4 @@ class NoConnectionPage extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
 import 'package:bm_security/services/api_service.dart';
@@ -60,16 +60,16 @@ class _LoginPageState extends State<LoginPage> {
 
         // Initialize location service with auto backup
         try {
-          debugPrint('🚀 Initializing location service with auto backup');
+          debugPrint('ðŸš€ Initializing location service with auto backup');
           final locationService = LocationService();
           final initialized = await locationService.initializeWithAutoBackup();
           if (initialized) {
-            debugPrint('✅ Location service initialized successfully');
+            debugPrint('âœ… Location service initialized successfully');
           } else {
-            debugPrint('⚠️ Location service initialization failed');
+            debugPrint('âš ï¸ Location service initialization failed');
           }
         } catch (e) {
-          debugPrint('⚠️ Could not initialize location service: $e');
+          debugPrint('âš ï¸ Could not initialize location service: $e');
         }
 
         Get.offAllNamed('/home');
@@ -258,10 +258,27 @@ class _LoginPageState extends State<LoginPage> {
           elevation: 2,
         ),
         child: _isLoading
-            ? const SizedBox(
-                height: 24,
-                width: 24,
-                child: LoadingSpinner.button(),
+            ? Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: LoadingSpinner(
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Signing in...',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
               )
             : const Text(
                 'SIGN IN',
@@ -301,3 +318,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+

@@ -152,7 +152,8 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Row(
           children: [
-            Icon(Icons.qr_code_scanner, color: Color.fromARGB(255, 12, 90, 153)),
+            Icon(Icons.qr_code_scanner,
+                color: Color.fromARGB(255, 12, 90, 153)),
             SizedBox(width: 8),
             Text('Confirm Pickup'),
           ],
@@ -228,7 +229,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         return Colors.green;
       case Status.cancelled:
         return Colors.red;
-      }
+    }
   }
 
   Widget _buildHeader() {
@@ -238,7 +239,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [
-             Color.fromARGB(255, 12, 90, 153),
+            Color.fromARGB(255, 12, 90, 153),
             Color.fromARGB(255, 12, 90, 153)
           ],
           begin: Alignment.topLeft,
@@ -247,7 +248,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blue.withOpacity(0.3),
+            color: Colors.blue.withValues(alpha: 0.3),
             blurRadius: 8,
             offset: const Offset(0, 4),
           ),
@@ -272,12 +273,12 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color:
-                      _getStatusColor(widget.request.status).withOpacity(0.2),
+                  color: _getStatusColor(widget.request.status)
+                      .withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color:
-                        _getStatusColor(widget.request.status).withOpacity(0.5),
+                    color: _getStatusColor(widget.request.status)
+                        .withValues(alpha: 0.5),
                   ),
                 ),
                 child: Text(
@@ -322,7 +323,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -368,7 +369,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: iconColor, size: 20),
@@ -422,7 +423,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -438,7 +439,7 @@ class _RequisitionDetailState extends State<RequisitionDetail> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: Colors.green.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: const Icon(Icons.account_balance_wallet,

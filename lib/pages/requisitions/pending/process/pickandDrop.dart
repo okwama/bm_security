@@ -232,7 +232,7 @@ class _PickAndDropState extends State<PickAndDrop> {
         leading: Container(
           margin: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(10),
           ),
           child: IconButton(
@@ -269,7 +269,7 @@ class _PickAndDropState extends State<PickAndDrop> {
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               child: const Center(
                 child: LoadingSpinner(),
               ),
@@ -287,7 +287,7 @@ class _PickAndDropState extends State<PickAndDrop> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 4,
             offset: const Offset(0, 2),

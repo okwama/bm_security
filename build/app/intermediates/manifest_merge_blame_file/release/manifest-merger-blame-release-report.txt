@@ -1,0 +1,664 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.bmsecurity.bm"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+8        android:minSdkVersion="21"
+9        android:targetSdkVersion="35" />
+10
+11    <uses-permission android:name="android.permission.CAMERA" />
+11-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:4:5-65
+11-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:4:22-62
+12    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+12-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:5:5-79
+12-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:5:22-76
+13    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+13-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:6:5-81
+13-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:6:22-78
+14    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+14-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:7:5-85
+14-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:7:22-82
+15    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+15-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:8:5-77
+15-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:8:22-74
+16    <uses-permission android:name="android.permission.WAKE_LOCK" />
+16-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:9:5-68
+16-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:9:22-65
+17    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+17-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:10:5-78
+17-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:10:22-76
+18    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+18-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:11:5-76
+18-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:11:22-74
+19    <uses-permission android:name="android.permission.INTERNET" />
+19-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:12:5-66
+19-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:12:22-64
+20    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+20-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:13:5-80
+20-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:13:22-78
+21
+22    <uses-feature
+22-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:15:5-85
+23        android:name="android.hardware.camera"
+23-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:15:19-57
+24        android:required="false" />
+24-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:15:58-82
+25    <!--
+26         Required to query activities that can process text, see:
+27         https://developer.android.com/training/package-visibility and
+28         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+29
+30         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin.
+31    -->
+32    <queries>
+32-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:102:5-107:15
+33        <intent>
+33-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:103:9-106:18
+34            <action android:name="android.intent.action.PROCESS_TEXT" />
+34-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:104:13-72
+34-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:104:21-70
+35
+36            <data android:mimeType="text/plain" />
+36-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:105:13-50
+36-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:105:19-48
+37        </intent>
+38        <intent>
+38-->[:file_picker] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\file_picker\intermediates\merged_manifest\release\AndroidManifest.xml:8:9-12:18
+39            <action android:name="android.intent.action.GET_CONTENT" />
+39-->[:file_picker] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\file_picker\intermediates\merged_manifest\release\AndroidManifest.xml:9:13-72
+39-->[:file_picker] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\file_picker\intermediates\merged_manifest\release\AndroidManifest.xml:9:21-69
+40
+41            <data android:mimeType="*/*" />
+41-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:105:13-50
+41-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:105:19-48
+42        </intent> <!-- Needs to be explicitly declared on Android R+ -->
+43        <package android:name="com.google.android.apps.maps" />
+43-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:33:9-64
+43-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:33:18-61
+44    </queries>
+45
+46    <uses-permission android:name="android.permission.VIBRATE" />
+46-->[:flutter_local_notifications] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_local_notifications\intermediates\merged_manifest\release\AndroidManifest.xml:7:5-66
+46-->[:flutter_local_notifications] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_local_notifications\intermediates\merged_manifest\release\AndroidManifest.xml:7:22-63
+47
+48    <uses-feature
+48-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:26:5-28:35
+49        android:glEsVersion="0x00020000"
+49-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:27:9-41
+50        android:required="true" />
+50-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:28:9-32
+51
+52    <permission
+52-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:22:5-24:47
+53        android:name="com.bmsecurity.bm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+53-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:23:9-81
+54        android:protectionLevel="signature" />
+54-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:24:9-44
+55
+56    <uses-permission android:name="com.bmsecurity.bm.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+56-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:26:5-97
+56-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:26:22-94
+57
+58    <application
+59        android:name="android.app.Application"
+59-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:19:9-42
+60        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+60-->[androidx.core:core:1.13.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\601ad0b41f4d7169e2e5a4811880001b\transformed\core-1.13.1\AndroidManifest.xml:28:18-86
+61        android:enableOnBackInvokedCallback="true"
+61-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:21:9-51
+62        android:extractNativeLibs="true"
+63        android:icon="@mipmap/ic_launcher"
+63-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:20:9-43
+64        android:label="BM Security"
+64-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:18:9-36
+65        android:requestLegacyExternalStorage="true"
+65-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:22:9-52
+66        android:usesCleartextTraffic="true" >
+66-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:23:9-44
+67
+68        <!-- Background Location Services -->
+69        <service
+69-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:26:9-28:40
+70            android:name="com.transistorsoft.flutter.backgroundfetch.HeadlessTask"
+70-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:27:13-83
+71            android:exported="false" />
+71-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:28:13-37
+72        <service
+72-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:30:9-33:38
+73            android:name="com.transistorsoft.flutter.backgroundfetch.HeadlessJobService"
+73-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:31:13-89
+74            android:exported="true"
+74-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:33:13-36
+75            android:permission="android.permission.BIND_JOB_SERVICE" />
+75-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:32:13-69
+76
+77        <!-- WorkManager Configuration -->
+78        <provider
+79            android:name="androidx.work.impl.WorkManagerInitializer"
+79-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:37:13-69
+80            android:authorities="com.bmsecurity.bm.workmanager-init"
+80-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:38:13-68
+81            android:enabled="false"
+81-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:39:13-36
+82            android:exported="false" />
+82-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:40:13-37
+83
+84        <!-- Background Location Service -->
+85        <service
+85-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:45:9-48:56
+86            android:name="com.bmsecurity.bm.workers.LocationWorker"
+86-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:46:13-68
+87            android:exported="false"
+87-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:47:13-37
+88            android:foregroundServiceType="location" />
+88-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:48:13-53
+89
+90        <!-- Boot Completed Receiver -->
+91        <receiver
+91-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:51:9-60:20
+92            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver"
+92-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:52:13-101
+93            android:exported="true" >
+93-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:53:13-36
+94            <intent-filter>
+94-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:54:13-59:29
+95                <action android:name="android.intent.action.BOOT_COMPLETED" />
+95-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:17-79
+95-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:25-76
+96                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+96-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:56:17-84
+96-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:56:25-81
+97                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+97-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:57:17-82
+97-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:57:25-79
+98                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+98-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:58:17-82
+98-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:58:25-79
+99            </intent-filter>
+100        </receiver>
+101        <receiver
+101-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:62:9-64:40
+102            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver"
+102-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:63:13-97
+103            android:exported="false" />
+103-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:64:13-37
+104        <receiver
+104-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:66:9-68:40
+105            android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiverWithChannels"
+105-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:67:13-109
+106            android:exported="false" />
+106-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:68:13-37
+107
+108        <activity
+108-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:69:9-90:20
+109            android:name="com.bmsecurity.bm.MainActivity"
+109-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:70:13-41
+110            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+110-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:75:13-163
+111            android:exported="true"
+111-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:71:13-36
+112            android:hardwareAccelerated="true"
+112-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:76:13-47
+113            android:launchMode="singleTop"
+113-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:72:13-43
+114            android:taskAffinity=""
+114-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:73:13-36
+115            android:theme="@style/LaunchTheme"
+115-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:74:13-47
+116            android:windowSoftInputMode="adjustResize" >
+116-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:77:13-55
+117
+118            <!--
+119                 Specifies an Android theme to apply to this Activity as soon as
+120                 the Android process has started. This theme is visible to the user
+121                 while the Flutter UI initializes. After that, this theme continues
+122                 to determine the Window background behind the Flutter UI.
+123            -->
+124            <meta-data
+124-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:82:13-85:17
+125                android:name="io.flutter.embedding.android.NormalTheme"
+125-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:83:15-70
+126                android:resource="@style/NormalTheme" />
+126-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:84:15-52
+127
+128            <intent-filter>
+128-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:86:13-89:29
+129                <action android:name="android.intent.action.MAIN" />
+129-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:87:17-68
+129-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:87:25-66
+130
+131                <category android:name="android.intent.category.LAUNCHER" />
+131-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:88:17-76
+131-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:88:27-74
+132            </intent-filter>
+133        </activity>
+134        <!--
+135             Don't delete the meta-data below.
+136             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java
+137        -->
+138        <meta-data
+138-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:93:9-95:33
+139            android:name="flutterEmbedding"
+139-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:94:13-44
+140            android:value="2" />
+140-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:95:13-30
+141
+142        <service
+142-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:12:9-16:44
+143            android:name="id.flutter.flutter_background_service.BackgroundService"
+143-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-83
+144            android:enabled="true"
+144-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:14:13-35
+145            android:exported="true"
+145-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:15:13-36
+146            android:stopWithTask="false" />
+146-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:16:13-41
+147
+148        <receiver
+148-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:18:9-21:39
+149            android:name="id.flutter.flutter_background_service.WatchdogReceiver"
+149-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:19:13-82
+150            android:enabled="true"
+150-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:20:13-35
+151            android:exported="true" />
+151-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:21:13-36
+152        <receiver
+152-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:22:9-31:20
+153            android:name="id.flutter.flutter_background_service.BootReceiver"
+153-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:23:13-78
+154            android:enabled="true"
+154-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:24:13-35
+155            android:exported="true" >
+155-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:25:13-36
+156            <intent-filter>
+156-->[:flutter_background_service_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\flutter_background_service_android\intermediates\merged_manifest\release\AndroidManifest.xml:26:13-30:29
+157                <action android:name="android.intent.action.BOOT_COMPLETED" />
+157-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:17-79
+157-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:25-76
+158                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+158-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:57:17-82
+158-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:57:25-79
+159                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+159-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:56:17-84
+159-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:56:25-81
+160            </intent-filter>
+161        </receiver>
+162
+163        <provider
+163-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:9:9-17:20
+164            android:name="io.flutter.plugins.imagepicker.ImagePickerFileProvider"
+164-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:10:13-82
+165            android:authorities="com.bmsecurity.bm.flutter.image_provider"
+165-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-74
+166            android:exported="false"
+166-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-37
+167            android:grantUriPermissions="true" >
+167-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:13:13-47
+168            <meta-data
+168-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:14:13-16:75
+169                android:name="android.support.FILE_PROVIDER_PATHS"
+169-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:15:17-67
+170                android:resource="@xml/flutter_image_picker_file_paths" />
+170-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:16:17-72
+171        </provider> <!-- Trigger Google Play services to install the backported photo picker module. -->
+172        <service
+172-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:19:9-31:19
+173            android:name="com.google.android.gms.metadata.ModuleDependencies"
+173-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:20:13-78
+174            android:enabled="false"
+174-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:21:13-36
+175            android:exported="false" >
+175-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:22:13-37
+176            <intent-filter>
+176-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:24:13-26:29
+177                <action android:name="com.google.android.gms.metadata.MODULE_DEPENDENCIES" />
+177-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:25:17-94
+177-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:25:25-91
+178            </intent-filter>
+179
+180            <meta-data
+180-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:28:13-30:36
+181                android:name="photopicker_activity:0:required"
+181-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:29:17-63
+182                android:value="" />
+182-->[:image_picker_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\image_picker_android\intermediates\merged_manifest\release\AndroidManifest.xml:30:17-33
+183        </service>
+184        <service
+184-->[:geolocator_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\geolocator_android\intermediates\merged_manifest\release\AndroidManifest.xml:8:9-12:56
+185            android:name="com.baseflow.geolocator.GeolocatorLocationService"
+185-->[:geolocator_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\geolocator_android\intermediates\merged_manifest\release\AndroidManifest.xml:9:13-77
+186            android:enabled="true"
+186-->[:geolocator_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\geolocator_android\intermediates\merged_manifest\release\AndroidManifest.xml:10:13-35
+187            android:exported="false"
+187-->[:geolocator_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\geolocator_android\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-37
+188            android:foregroundServiceType="location" />
+188-->[:geolocator_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\geolocator_android\intermediates\merged_manifest\release\AndroidManifest.xml:12:13-53
+189
+190        <activity
+190-->[:url_launcher_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\url_launcher_android\intermediates\merged_manifest\release\AndroidManifest.xml:8:9-11:74
+191            android:name="io.flutter.plugins.urllauncher.WebViewActivity"
+191-->[:url_launcher_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\url_launcher_android\intermediates\merged_manifest\release\AndroidManifest.xml:9:13-74
+192            android:exported="false"
+192-->[:url_launcher_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\url_launcher_android\intermediates\merged_manifest\release\AndroidManifest.xml:10:13-37
+193            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+193-->[:url_launcher_android] C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\url_launcher_android\intermediates\merged_manifest\release\AndroidManifest.xml:11:13-71
+194
+195        <provider
+195-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:29:9-37:20
+196            android:name="androidx.startup.InitializationProvider"
+196-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:30:13-67
+197            android:authorities="com.bmsecurity.bm.androidx-startup"
+197-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:31:13-68
+198            android:exported="false" >
+198-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:32:13-37
+199            <meta-data
+199-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:34:13-36:52
+200                android:name="androidx.work.WorkManagerInitializer"
+200-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:35:17-68
+201                android:value="androidx.startup" />
+201-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:36:17-49
+202            <meta-data
+202-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\70a06ae4da1166c74c352bbf265622db\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:29:13-31:52
+203                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+203-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\70a06ae4da1166c74c352bbf265622db\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:30:17-78
+204                android:value="androidx.startup" />
+204-->[androidx.lifecycle:lifecycle-process:2.7.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\70a06ae4da1166c74c352bbf265622db\transformed\jetified-lifecycle-process-2.7.0\AndroidManifest.xml:31:17-49
+205            <meta-data
+205-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:29:13-31:52
+206                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+206-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:30:17-85
+207                android:value="androidx.startup" />
+207-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:31:17-49
+208        </provider>
+209
+210        <service
+210-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:39:9-45:35
+211            android:name="androidx.work.impl.background.systemalarm.SystemAlarmService"
+211-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:40:13-88
+212            android:directBootAware="false"
+212-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:41:13-44
+213            android:enabled="@bool/enable_system_alarm_service_default"
+213-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:42:13-72
+214            android:exported="false" />
+214-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:43:13-37
+215        <service
+215-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:46:9-52:35
+216            android:name="androidx.work.impl.background.systemjob.SystemJobService"
+216-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:47:13-84
+217            android:directBootAware="false"
+217-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:48:13-44
+218            android:enabled="@bool/enable_system_job_service_default"
+218-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:49:13-70
+219            android:exported="true"
+219-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:50:13-36
+220            android:permission="android.permission.BIND_JOB_SERVICE" />
+220-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:51:13-69
+221        <service
+221-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:53:9-59:35
+222            android:name="androidx.work.impl.foreground.SystemForegroundService"
+222-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:54:13-81
+223            android:directBootAware="false"
+223-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:55:13-44
+224            android:enabled="@bool/enable_system_foreground_service_default"
+224-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:56:13-77
+225            android:exported="false" />
+225-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:57:13-37
+226
+227        <receiver
+227-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:61:9-66:35
+228            android:name="androidx.work.impl.utils.ForceStopRunnable$BroadcastReceiver"
+228-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:62:13-88
+229            android:directBootAware="false"
+229-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:63:13-44
+230            android:enabled="true"
+230-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:64:13-35
+231            android:exported="false" />
+231-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:65:13-37
+232        <receiver
+232-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:67:9-77:20
+233            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryChargingProxy"
+233-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:68:13-106
+234            android:directBootAware="false"
+234-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:69:13-44
+235            android:enabled="false"
+235-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:70:13-36
+236            android:exported="false" >
+236-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:71:13-37
+237            <intent-filter>
+237-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:73:13-76:29
+238                <action android:name="android.intent.action.ACTION_POWER_CONNECTED" />
+238-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:17-87
+238-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:74:25-84
+239                <action android:name="android.intent.action.ACTION_POWER_DISCONNECTED" />
+239-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:17-90
+239-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:75:25-87
+240            </intent-filter>
+241        </receiver>
+242        <receiver
+242-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:78:9-88:20
+243            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$BatteryNotLowProxy"
+243-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:79:13-104
+244            android:directBootAware="false"
+244-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:80:13-44
+245            android:enabled="false"
+245-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:81:13-36
+246            android:exported="false" >
+246-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:82:13-37
+247            <intent-filter>
+247-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:84:13-87:29
+248                <action android:name="android.intent.action.BATTERY_OKAY" />
+248-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:17-77
+248-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:85:25-74
+249                <action android:name="android.intent.action.BATTERY_LOW" />
+249-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:17-76
+249-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:86:25-73
+250            </intent-filter>
+251        </receiver>
+252        <receiver
+252-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:89:9-99:20
+253            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$StorageNotLowProxy"
+253-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:90:13-104
+254            android:directBootAware="false"
+254-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:91:13-44
+255            android:enabled="false"
+255-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:92:13-36
+256            android:exported="false" >
+256-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:93:13-37
+257            <intent-filter>
+257-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:95:13-98:29
+258                <action android:name="android.intent.action.DEVICE_STORAGE_LOW" />
+258-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:17-83
+258-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:96:25-80
+259                <action android:name="android.intent.action.DEVICE_STORAGE_OK" />
+259-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:17-82
+259-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:97:25-79
+260            </intent-filter>
+261        </receiver>
+262        <receiver
+262-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:100:9-109:20
+263            android:name="androidx.work.impl.background.systemalarm.ConstraintProxy$NetworkStateProxy"
+263-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:101:13-103
+264            android:directBootAware="false"
+264-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:102:13-44
+265            android:enabled="false"
+265-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:103:13-36
+266            android:exported="false" >
+266-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:104:13-37
+267            <intent-filter>
+267-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:106:13-108:29
+268                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+268-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:17-79
+268-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:107:25-76
+269            </intent-filter>
+270        </receiver>
+271        <receiver
+271-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:110:9-121:20
+272            android:name="androidx.work.impl.background.systemalarm.RescheduleReceiver"
+272-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:111:13-88
+273            android:directBootAware="false"
+273-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:112:13-44
+274            android:enabled="false"
+274-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:113:13-36
+275            android:exported="false" >
+275-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:114:13-37
+276            <intent-filter>
+276-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:116:13-120:29
+277                <action android:name="android.intent.action.BOOT_COMPLETED" />
+277-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:17-79
+277-->C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\android\app\src\main\AndroidManifest.xml:55:25-76
+278                <action android:name="android.intent.action.TIME_SET" />
+278-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:17-73
+278-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:118:25-70
+279                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+279-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:17-81
+279-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:119:25-78
+280            </intent-filter>
+281        </receiver>
+282        <receiver
+282-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:122:9-131:20
+283            android:name="androidx.work.impl.background.systemalarm.ConstraintProxyUpdateReceiver"
+283-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:123:13-99
+284            android:directBootAware="false"
+284-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:124:13-44
+285            android:enabled="@bool/enable_system_alarm_service_default"
+285-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:125:13-72
+286            android:exported="false" >
+286-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:126:13-37
+287            <intent-filter>
+287-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:128:13-130:29
+288                <action android:name="androidx.work.impl.background.systemalarm.UpdateProxies" />
+288-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:17-98
+288-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:129:25-95
+289            </intent-filter>
+290        </receiver>
+291        <receiver
+291-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:132:9-142:20
+292            android:name="androidx.work.impl.diagnostics.DiagnosticsReceiver"
+292-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:133:13-78
+293            android:directBootAware="false"
+293-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:134:13-44
+294            android:enabled="true"
+294-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:135:13-35
+295            android:exported="true"
+295-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:136:13-36
+296            android:permission="android.permission.DUMP" >
+296-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:137:13-57
+297            <intent-filter>
+297-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:139:13-141:29
+298                <action android:name="androidx.work.diagnostics.REQUEST_DIAGNOSTICS" />
+298-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:17-88
+298-->[androidx.work:work-runtime:2.9.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\3032f7664ca4676571546aa2d859fc71\transformed\work-runtime-2.9.0\AndroidManifest.xml:140:25-85
+299            </intent-filter>
+300        </receiver>
+301
+302        <activity
+302-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:23:9-27:75
+303            android:name="com.google.android.gms.auth.api.signin.internal.SignInHubActivity"
+303-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:24:13-93
+304            android:excludeFromRecents="true"
+304-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:25:13-46
+305            android:exported="false"
+305-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:26:13-37
+306            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+306-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:27:13-72
+307        <!--
+308            Service handling Google Sign-In user revocation. For apps that do not integrate with
+309            Google Sign-In, this service will never be started.
+310        -->
+311        <service
+311-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:33:9-37:51
+312            android:name="com.google.android.gms.auth.api.signin.RevocationBoundService"
+312-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:34:13-89
+313            android:exported="true"
+313-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:35:13-36
+314            android:permission="com.google.android.gms.auth.api.signin.permission.REVOCATION_NOTIFICATION"
+314-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:36:13-107
+315            android:visibleToInstantApps="true" /> <!-- Needs to be explicitly declared on P+ -->
+315-->[com.google.android.gms:play-services-auth:21.3.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\2a96de484a7165d7ee596fd22e3a26d4\transformed\jetified-play-services-auth-21.3.0\AndroidManifest.xml:37:13-48
+316        <uses-library
+316-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:39:9-41:40
+317            android:name="org.apache.http.legacy"
+317-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:40:13-50
+318            android:required="false" />
+318-->[com.google.android.gms:play-services-maps:18.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\e7bccd6713fc1fca681bccdc684defa2\transformed\jetified-play-services-maps-18.2.0\AndroidManifest.xml:41:13-37
+319
+320        <activity
+320-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\868f9856fabea6e75f4837e0aef8c6e4\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:9-173
+321            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+321-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\868f9856fabea6e75f4837e0aef8c6e4\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:19-85
+322            android:exported="false"
+322-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\868f9856fabea6e75f4837e0aef8c6e4\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:146-170
+323            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+323-->[com.google.android.gms:play-services-base:18.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\868f9856fabea6e75f4837e0aef8c6e4\transformed\jetified-play-services-base-18.5.0\AndroidManifest.xml:5:86-145
+324
+325        <meta-data
+325-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\40ef4df62b1c3ce56a2c64e37d5a0dd2\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:9-122
+326            android:name="com.google.android.gms.version"
+326-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\40ef4df62b1c3ce56a2c64e37d5a0dd2\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:20-65
+327            android:value="@integer/google_play_services_version" />
+327-->[com.google.android.gms:play-services-basement:18.4.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\40ef4df62b1c3ce56a2c64e37d5a0dd2\transformed\jetified-play-services-basement-18.4.0\AndroidManifest.xml:6:66-119
+328
+329        <uses-library
+329-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:23:9-25:40
+330            android:name="androidx.window.extensions"
+330-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:24:13-54
+331            android:required="false" />
+331-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:25:13-37
+332        <uses-library
+332-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:26:9-28:40
+333            android:name="androidx.window.sidecar"
+333-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:27:13-51
+334            android:required="false" />
+334-->[androidx.window:window:1.2.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\eecc3e92f92f23f284115b01f529cb69\transformed\jetified-window-1.2.0\AndroidManifest.xml:28:13-37
+335
+336        <receiver
+336-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:34:9-52:20
+337            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+337-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:35:13-76
+338            android:directBootAware="false"
+338-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:36:13-44
+339            android:enabled="true"
+339-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:37:13-35
+340            android:exported="true"
+340-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:38:13-36
+341            android:permission="android.permission.DUMP" >
+341-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:39:13-57
+342            <intent-filter>
+342-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:40:13-42:29
+343                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+343-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:17-91
+343-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:41:25-88
+344            </intent-filter>
+345            <intent-filter>
+345-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:43:13-45:29
+346                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+346-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:17-85
+346-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:44:25-82
+347            </intent-filter>
+348            <intent-filter>
+348-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:46:13-48:29
+349                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+349-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:17-88
+349-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:47:25-85
+350            </intent-filter>
+351            <intent-filter>
+351-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:49:13-51:29
+352                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+352-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:17-95
+352-->[androidx.profileinstaller:profileinstaller:1.3.1] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\455ff0beb5166b3c68e836cced8417db\transformed\jetified-profileinstaller-1.3.1\AndroidManifest.xml:50:25-92
+353            </intent-filter>
+354        </receiver>
+355
+356        <service
+356-->[androidx.room:room-runtime:2.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\241be29bebc39df9f8d100818eb00d03\transformed\room-runtime-2.5.0\AndroidManifest.xml:24:9-28:63
+357            android:name="androidx.room.MultiInstanceInvalidationService"
+357-->[androidx.room:room-runtime:2.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\241be29bebc39df9f8d100818eb00d03\transformed\room-runtime-2.5.0\AndroidManifest.xml:25:13-74
+358            android:directBootAware="true"
+358-->[androidx.room:room-runtime:2.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\241be29bebc39df9f8d100818eb00d03\transformed\room-runtime-2.5.0\AndroidManifest.xml:26:13-43
+359            android:exported="false" />
+359-->[androidx.room:room-runtime:2.5.0] C:\Users\Benjamin Okwama\.gradle\caches\transforms-4\241be29bebc39df9f8d100818eb00d03\transformed\room-runtime-2.5.0\AndroidManifest.xml:27:13-37
+360    </application>
+361
+362</manifest>

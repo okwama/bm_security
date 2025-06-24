@@ -1,9 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:get_storage/get_storage.dart';
 import 'package:bm_security/utils/auth_config.dart';
 import '../../components/loading_spinner.dart';
+import 'add_staff.dart';
 
 class MyTeamPage extends StatefulWidget {
   const MyTeamPage({super.key});
@@ -85,6 +86,21 @@ class _MyTeamPageState extends State<MyTeamPage> {
         key: _refreshKey,
         onRefresh: _fetchTeamMembers,
         child: _buildBody(),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const AddStaffPage()),
+          ).then((value) {
+            if (value == true) {
+              _fetchTeamMembers();
+            }
+          });
+        },
+        backgroundColor: const Color.fromARGB(255, 12, 90, 153),
+        foregroundColor: Colors.white,
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -172,7 +188,8 @@ class _MyTeamPageState extends State<MyTeamPage> {
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(12),
                       ),
-                      child: member['photoUrl'] != null
+                      child: member['photoUrl'] != null &&
+                              (member['photoUrl'] as String).isNotEmpty
                           ? Image.network(
                               member['photoUrl'],
                               fit: BoxFit.cover,
@@ -210,7 +227,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
                             begin: Alignment.bottomCenter,
                             end: Alignment.topCenter,
                             colors: [
-                              Colors.black.withOpacity(0.7),
+                              Colors.black.withValues(alpha: 0.7),
                               Colors.transparent,
                             ],
                           ),
@@ -290,7 +307,7 @@ class _MyTeamPageState extends State<MyTeamPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -304,3 +321,4 @@ class _MyTeamPageState extends State<MyTeamPage> {
     );
   }
 }
+

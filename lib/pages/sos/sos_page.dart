@@ -455,22 +455,22 @@ class _SOSPageState extends State<SOSPage> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.red.withOpacity(0.3),
+                              color: Colors.red.withValues(alpha: 0.3),
                               spreadRadius: 5,
                               blurRadius: 15,
                             ),
                           ],
                         ),
-                        child: Column(
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.sos,
                               size: 80,
                               color: Colors.white,
                             ),
-                            const SizedBox(height: 16),
-                            const Text(
+                            SizedBox(height: 16),
+                            Text(
                               'SEND SOS',
                               style: TextStyle(
                                 color: Colors.white,
@@ -478,8 +478,8 @@ class _SOSPageState extends State<SOSPage> {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            const Text(
+                            SizedBox(height: 8),
+                            Text(
                               'Tap to send emergency alert',
                               style: TextStyle(
                                 color: Colors.white70,

@@ -1,0 +1,26 @@
+<lint-module
+    format="1"
+    dir="C:\Users\Benjamin Okwama\AppData\Local\Pub\Cache\hosted\pub.dev\device_info_plus-10.1.2\android"
+    name=":device_info_plus"
+    type="LIBRARY"
+    maven="dev.fluttercommunity.plus.device_info:device_info_plus:"
+    agpVersion="8.2.1"
+    buildFolder="C:\Users\Benjamin Okwama\Desktop\CIT\bm_security\build\device_info_plus"
+    bootClassPath="C:\Users\Benjamin Okwama\AppData\Local\Android\Sdk\platforms\android-34\android.jar;C:\Users\Benjamin Okwama\AppData\Local\Android\Sdk\build-tools\34.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34"
+    neverShrinking="true">
+  <lintOptions
+      disable="InvalidPackage"
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true">
+    <severities>
+      <severity
+        id="InvalidPackage"
+        severity="IGNORE" />
+    </severities>
+  </lintOptions>
+  <variant name="release"/>
+</lint-module>

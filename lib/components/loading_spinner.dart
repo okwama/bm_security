@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 
 /// A reusable loading spinner widget with iOS-style design
@@ -6,25 +6,25 @@ import 'package:flutter/cupertino.dart';
 class LoadingSpinner extends StatelessWidget {
   /// The message to display below the spinner
   final String? message;
-  
+
   /// The size of the spinner (defaults to 16)
   final double size;
-  
+
   /// The color of the spinner (uses theme color if not specified)
   final Color? color;
-  
+
   /// Whether to show the spinner in a card/container
   final bool showInCard;
-  
+
   /// The padding around the spinner content
   final EdgeInsets padding;
-  
+
   /// Whether to center the spinner (useful for full-screen loading)
   final bool centered;
-  
+
   /// The style of the loading text
   final TextStyle? textStyle;
-  
+
   /// The spacing between spinner and text
   final double spacing;
 
@@ -44,17 +44,16 @@ class LoadingSpinner extends StatelessWidget {
   const LoadingSpinner.fullScreen({
     super.key,
     String? message,
-    double size = 20,
+    double size = 24,
     Color? color,
-  }) : 
-    message = message ?? 'Loading...',
-    size = size,
-    color = color,
-    showInCard = true,
-    padding = const EdgeInsets.all(40),
-    centered = true,
-    textStyle = null,
-    spacing = 24;
+  })  : message = message ?? 'Loading...',
+        size = size,
+        color = color,
+        showInCard = true,
+        padding = const EdgeInsets.all(40),
+        centered = true,
+        textStyle = null,
+        spacing = 24;
 
   /// Factory constructor for inline loading (smaller, no centering)
   const LoadingSpinner.inline({
@@ -62,15 +61,14 @@ class LoadingSpinner extends StatelessWidget {
     String? message,
     double size = 14,
     Color? color,
-  }) : 
-    message = message,
-    size = size,
-    color = color,
-    showInCard = false,
-    padding = const EdgeInsets.all(16),
-    centered = false,
-    textStyle = null,
-    spacing = 12;
+  })  : message = message,
+        size = size,
+        color = color,
+        showInCard = false,
+        padding = const EdgeInsets.all(16),
+        centered = false,
+        textStyle = null,
+        spacing = 12;
 
   /// Factory constructor for button loading state
   const LoadingSpinner.button({
@@ -78,15 +76,14 @@ class LoadingSpinner extends StatelessWidget {
     String? message,
     double size = 12,
     Color? color,
-  }) : 
-    message = message,
-    size = size,
-    color = color,
-    showInCard = false,
-    padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    centered = false,
-    textStyle = null,
-    spacing = 8;
+  })  : message = message,
+        size = size,
+        color = color,
+        showInCard = false,
+        padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        centered = false,
+        textStyle = null,
+        spacing = 8;
 
   /// Factory constructor for card-style loading
   const LoadingSpinner.card({
@@ -94,38 +91,38 @@ class LoadingSpinner extends StatelessWidget {
     String? message,
     double size = 16,
     Color? color,
-  }) : 
-    message = message ?? 'Loading...',
-    size = size,
-    color = color,
-    showInCard = true,
-    padding = const EdgeInsets.all(24),
-    centered = true,
-    textStyle = null,
-    spacing = 16;
+  })  : message = message ?? 'Loading...',
+        size = size,
+        color = color,
+        showInCard = true,
+        padding = const EdgeInsets.all(24),
+        centered = true,
+        textStyle = null,
+        spacing = 16;
 
   @override
   Widget build(BuildContext context) {
     final spinner = _buildSpinner(context);
-    
+
     if (showInCard) {
       return _buildCardContainer(context, spinner);
     }
-    
+
     if (centered) {
       return Center(child: spinner);
     }
-    
+
     return spinner;
   }
 
   Widget _buildSpinner(BuildContext context) {
-    final effectiveColor = color ?? CupertinoColors.systemBlue;
-    final effectiveTextStyle = textStyle ?? TextStyle(
-      color: CupertinoColors.secondaryLabel,
-      fontSize: _getTextSize(),
-      fontWeight: FontWeight.w400,
-    );
+    final effectiveColor = color ?? Theme.of(context).primaryColor;
+    final effectiveTextStyle = textStyle ??
+        TextStyle(
+          color: CupertinoColors.secondaryLabel,
+          fontSize: _getTextSize(),
+          fontWeight: FontWeight.w500,
+        );
 
     return Container(
       padding: padding,
@@ -151,20 +148,12 @@ class LoadingSpinner extends StatelessWidget {
   }
 
   Widget _buildCardContainer(BuildContext context, Widget child) {
+    // Full screen container for all card-style loading
     return Container(
-      margin: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: CupertinoColors.systemGrey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
+      width: double.infinity,
+      height: double.infinity,
+      color: CupertinoColors.systemBackground.withValues(alpha: 0.85),
+      child: Center(child: child),
     );
   }
 
@@ -180,16 +169,16 @@ class LoadingSpinner extends StatelessWidget {
 class LoadingOverlay extends StatelessWidget {
   /// The child widget to show the overlay over
   final Widget child;
-  
+
   /// Whether to show the loading overlay
   final bool isLoading;
-  
+
   /// The loading message
   final String? message;
-  
+
   /// The background color of the overlay
   final Color? backgroundColor;
-  
+
   /// The loading spinner configuration
   final LoadingSpinner? loadingWidget;
 
@@ -209,10 +198,9 @@ class LoadingOverlay extends StatelessWidget {
         child,
         if (isLoading)
           Container(
-            color: backgroundColor ?? 
-                   CupertinoColors.systemBackground.withOpacity(0.8),
-            child: loadingWidget ?? 
-                   LoadingSpinner.fullScreen(message: message),
+            color: backgroundColor ??
+                CupertinoColors.systemBackground.withValues(alpha: 0.8),
+            child: loadingWidget ?? LoadingSpinner.fullScreen(message: message),
           ),
       ],
     );
@@ -222,8 +210,9 @@ class LoadingOverlay extends StatelessWidget {
 /// A stateful widget that provides easy loading state management
 class LoadingStateBuilder extends StatefulWidget {
   /// Builder function that receives the loading state and setState function
-  final Widget Function(BuildContext context, bool isLoading, Function(bool) setLoading) builder;
-  
+  final Widget Function(
+      BuildContext context, bool isLoading, Function(bool) setLoading) builder;
+
   /// Initial loading state
   final bool initialLoading;
 

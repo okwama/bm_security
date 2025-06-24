@@ -55,6 +55,13 @@ flutter {
     source = "../.."
 }
 
+configurations.all {
+    resolutionStrategy {
+        force 'org.bouncycastle:bcprov-jdk18on:1.70'
+        force 'org.bouncycastle:bcpkix-jdk18on:1.70'
+    }
+}
+
 dependencies {
     implementation 'com.google.android.gms:play-services-auth:21.3.0'
     implementation 'com.google.android.gms:play-services-base:18.3.0'

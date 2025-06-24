@@ -249,16 +249,16 @@ class ApiException implements Exception {
 
   ApiException(this.message);
 
-  factory ApiException.fromDioError(DioError error) {
+  factory ApiException.fromDioError(DioException error) {
     switch (error.type) {
-      case DioErrorType.connectionTimeout:
-      case DioErrorType.sendTimeout:
-      case DioErrorType.receiveTimeout:
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
         return ApiException('Request timeout');
-      case DioErrorType.badResponse:
+      case DioExceptionType.badResponse:
         return ApiException(
             'Server responded with ${error.response?.statusCode}');
-      case DioErrorType.cancel:
+      case DioExceptionType.cancel:
         return ApiException('Request cancelled');
       default:
         return ApiException('Network error occurred');

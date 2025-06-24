@@ -1,4 +1,4 @@
-import 'package:bm_security/pages/maps/maps.dart';
+﻿import 'package:bm_security/pages/maps/maps.dart';
 import 'package:bm_security/pages/my_team/my_team.dart';
 import 'package:bm_security/pages/profile/profile.dart';
 import 'package:bm_security/pages/requisitions/completed/completed.dart';
@@ -32,6 +32,7 @@ class _HomePageState extends State<HomePage> {
   final RequisitionsService _requisitionsService = RequisitionsService();
   int _pendingCount = 0;
   int _inProgressCount = 0;
+  bool _isFirstLoad = true;
 
   @override
   void initState() {
@@ -41,6 +42,15 @@ class _HomePageState extends State<HomePage> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _promptLocationPermission(context);
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_isFirstLoad) {
+      return;
+    }
+    _isFirstLoad = false;
   }
 
   void _loadUserData() {
@@ -64,32 +74,20 @@ class _HomePageState extends State<HomePage> {
     if (!mounted) return;
 
     try {
-      // Reset counts before loading
       setState(() {
-        _pendingCount = 0;
-        _inProgressCount = 0;
+        _isLoading = true;
       });
 
-      // Load pending requests
-      List<dynamic> pendingRequests = [];
-      try {
-        pendingRequests = await _requisitionsService.getMyAssignedRequests();
-      } catch (error) {
-        print('Error loading pending requests: $error');
-      }
-
-      // Load in-progress requests
-      List<dynamic> inProgressRequests = [];
-      try {
-        inProgressRequests = await _requisitionsService.getInProgressRequests();
-      } catch (error) {
-        print('Error loading in-progress requests: $error');
-      }
+      // Load both pending and in-progress requests in parallel
+      final results = await Future.wait([
+        _requisitionsService.getMyAssignedRequests(),
+        _requisitionsService.getInProgressRequests(),
+      ]);
 
       if (mounted) {
         setState(() {
-          _pendingCount = pendingRequests.length;
-          _inProgressCount = inProgressRequests.length;
+          _pendingCount = results[0].length;
+          _inProgressCount = results[1].length;
           _isLoading = false;
         });
       }
@@ -99,12 +97,9 @@ class _HomePageState extends State<HomePage> {
 
       if (mounted) {
         setState(() {
-          _pendingCount = 0;
-          _inProgressCount = 0;
           _isLoading = false;
         });
 
-        // Show error to user
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content:
@@ -219,8 +214,7 @@ class _HomePageState extends State<HomePage> {
   Future<void> _showCallDialog() async {
     // List of emergency contacts
     final emergencyContacts = [
-      {'name': 'Security Office', 'phone': '+254700123456'},
-      {'name': 'Estate Manager', 'phone': '+254711987654'},
+      {'name': 'Head Office', 'phone': '+254700123456'},
       {'name': 'Maintenance', 'phone': '+254722345678'},
       {'name': 'Emergency Services', 'phone': '999'},
     ];
@@ -245,7 +239,7 @@ class _HomePageState extends State<HomePage> {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundColor:
-                      Theme.of(context).primaryColor.withOpacity(0.1),
+                      Theme.of(context).primaryColor.withValues(alpha: 0.1),
                   child: Icon(
                     index == 3 ? Icons.emergency : Icons.person,
                     color: Theme.of(context).primaryColor,
@@ -296,6 +290,36 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _navigateToPending() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PendingRequisitionsPage()),
+    ).then((_) {
+      // Refresh counts when returning from pending page
+      _loadCounts();
+    });
+  }
+
+  void _navigateToInProgress() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const InProgressPage()),
+    ).then((_) {
+      // Refresh counts when returning from in-progress page
+      _loadCounts();
+    });
+  }
+
+  void _navigateToCompleted() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CompletedPage()),
+    ).then((_) {
+      // Refresh counts when returning from completed page
+      _loadCounts();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -305,7 +329,7 @@ class _HomePageState extends State<HomePage> {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 12, 90, 153),
-        foregroundColor: Colors.white,
+        foregroundColor: Colors.grey,
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -344,231 +368,202 @@ class _HomePageState extends State<HomePage> {
       ),
       body: _isLoading
           ? const LoadingSpinner.fullScreen(message: 'Loading dashboard...')
-          : SafeArea(
-              child: Column(
-                children: [
-                  // Grid menu items
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: GridView.count(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 1.0,
-                        mainAxisSpacing: 1.0,
-                        children: [
-                          // User Profile Tile
-                          MenuTile(
-                            title: userRole.toUpperCase(),
-                            subtitle: userName,
-                            icon: Icons.person,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const ProfilePage()),
-                              );
-                            },
-                          ),
-                          MenuTile(
-                            title: 'PENDING',
-                            icon: Icons.pending_outlined,
-                            badgeCount: _isLoading ? null : _pendingCount,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const PendingRequisitionsPage()),
-                              );
-                            },
-                          ),
+          : Container(
+              color: Colors.grey.shade200,
+              child: SafeArea(
+                child: Column(
+                  children: [
+                    // Grid menu items
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 1.0,
+                          mainAxisSpacing: 1.0,
+                          children: [
+                            // User Profile Tile
+                            MenuTile(
+                              title: userRole.toUpperCase(),
+                              subtitle: userName,
+                              icon: Icons.person,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const ProfilePage()),
+                                );
+                              },
+                            ),
+                            MenuTile(
+                              title: 'PENDING',
+                              icon: Icons.pending_outlined,
+                              badgeCount: _isLoading ? null : _pendingCount,
+                              onTap: _navigateToPending,
+                            ),
 
-                          MenuTile(
-                            title: 'IN PROGRESS',
-                            icon: Icons.watch_later_outlined,
-                            badgeCount: _isLoading ? null : _inProgressCount,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const InProgressPage()),
-                              );
-                            },
-                          ),
+                            MenuTile(
+                              title: 'IN PROGRESS',
+                              icon: Icons.watch_later_outlined,
+                              badgeCount: _isLoading ? null : _inProgressCount,
+                              onTap: _navigateToInProgress,
+                            ),
 
-                          MenuTile(
-                            title: 'COMPLETED',
-                            icon: Icons.done_all_outlined,
-                            badgeCount:
-                                _isLoading ? null : _completedCashRequests,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const CompletedPage()),
-                              );
-                            },
-                          ),
+                            MenuTile(
+                              title: 'COMPLETED',
+                              icon: Icons.done_all_outlined,
+                              badgeCount:
+                                  _isLoading ? null : _completedCashRequests,
+                              onTap: _navigateToCompleted,
+                            ),
 
-                          MenuTile(
-                            title: 'SOS',
-                            icon: Icons.emergency_outlined,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const SOSPage()),
-                              );
-                            },
-                          ),
-                          MenuTile(
-                            title: 'My Team',
-                            icon: Icons.group,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => const MyTeamPage()),
-                              );
-                            },
-                          ),
+                            MenuTile(
+                              title: 'SOS',
+                              icon: Icons.emergency_outlined,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const SOSPage()),
+                                );
+                              },
+                            ),
+                            MenuTile(
+                              title: 'My Team',
+                              icon: Icons.group,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MyTeamPage()),
+                                );
+                              },
+                            ),
 
-                          MenuTile(
-                            title: 'Maps',
-                            icon: Icons.map,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => MapsPage()),
-                              );
-                            },
-                          ),
+                            MenuTile(
+                              title: 'Call',
+                              icon: Icons.call,
+                              onTap: () {
+                                _showCallDialog();
+                              },
+                            ),
 
-                          MenuTile(
-                            title: 'Call',
-                            icon: Icons.call,
-                            onTap: () {
-                              _showCallDialog();
-                            },
-                          ),
+                            // DEBUG: Location Tracking (Remove in production)
+                            MenuTile(
+                              title: 'Maps',
+                              icon: Icons.map,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => const MapsPage()),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
 
-                          // DEBUG: Location Tracking (Remove in production)
-                          MenuTile(
-                            title: 'DEBUG Location',
-                            icon: Icons.bug_report,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const DebugLocationPage()),
-                              );
-                            },
+                    // Powered by logo and watermark
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 16, horizontal: 20),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade50,
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(20),
+                          topRight: Radius.circular(20),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.shade300,
+                            blurRadius: 3,
+                            offset: const Offset(0, -1),
                           ),
                         ],
                       ),
-                    ),
-                  ),
-
-                  // Powered by logo and watermark
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        vertical: 16, horizontal: 20),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(20),
-                        topRight: Radius.circular(20),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.shade300,
-                          blurRadius: 3,
-                          offset: const Offset(0, -1),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Text(
-                              'Powered by ',
-                              style: TextStyle(
-                                color: Colors.grey,
-                                fontSize: 12,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: [
-                                    Theme.of(context).primaryColor,
-                                    Colors.orange
-                                  ],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: const Text(
-                                'Cit Logistics',
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                'Powered by ',
                                 style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  letterSpacing: 1.5,
+                                  color: Colors.grey,
+                                  fontSize: 12,
                                 ),
                               ),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(
-                              Icons.verified,
-                              size: 16,
-                              color: Colors.orange,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.copyright,
-                              size: 10,
-                              color: Colors.grey.shade600,
-                            ),
-                            const SizedBox(width: 2),
-                            Text(
-                              '${DateTime.now().year} Security Management System',
-                              style: TextStyle(
-                                color: Colors.grey.shade600,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w500,
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).primaryColor,
+                                      Colors.orange
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: const Text(
+                                  'Cit Logistics',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Version 1.0.0',
-                          style: TextStyle(
-                            color: Colors.grey.shade400,
-                            fontSize: 9,
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.verified,
+                                size: 16,
+                                color: Colors.orange,
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ), // Watermark
-                ],
+                          const SizedBox(height: 6),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.copyright,
+                                size: 10,
+                                color: Colors.grey.shade600,
+                              ),
+                              const SizedBox(width: 2),
+                              Text(
+                                '${DateTime.now().year} Security Management System',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Version 1.0.0',
+                            style: TextStyle(
+                              color: Colors.grey.shade400,
+                              fontSize: 9,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ), // Watermark
+                  ],
+                ),
               ),
             ),
     );
   }
 }
+

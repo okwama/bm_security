@@ -91,9 +91,9 @@ class RequestUpdater {
     } catch (e, stackTrace) {
       print('Error in confirmPickup: $e');
       if (e is DioException) {
-        print('DioError type: ${e.type}');
-        print('DioError response: ${e.response?.data}');
-        print('DioError status code: ${e.response?.statusCode}');
+        print('DioException type: ${e.type}');
+        print('DioException response: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
       }
       print('Stack trace: $stackTrace');
       rethrow;
@@ -231,9 +231,9 @@ class RequestUpdater {
       print('Error type: ${e.runtimeType}');
       print('Error message: $e');
       if (e is DioException) {
-        print('DioError type: ${e.type}');
-        print('DioError response: ${e.response?.data}');
-        print('DioError status code: ${e.response?.statusCode}');
+        print('DioException type: ${e.type}');
+        print('DioException response: ${e.response?.data}');
+        print('DioException status code: ${e.response?.statusCode}');
       }
       print('Stack trace: $stackTrace');
       rethrow;

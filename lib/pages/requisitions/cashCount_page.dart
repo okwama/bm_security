@@ -1,4 +1,4 @@
-import 'package:bm_security/models/cash_count.dart';
+﻿import 'package:bm_security/models/cash_count.dart';
 import 'package:flutter/material.dart';
 
 class CashCountPage extends StatefulWidget {
@@ -106,7 +106,7 @@ class _CashCountPageState extends State<CashCountPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -151,7 +151,7 @@ class _CashCountPageState extends State<CashCountPage> {
             boxShadow: hasValue
                 ? [
                     BoxShadow(
-                      color: Colors.green.withOpacity(0.1),
+                      color: Colors.green.withValues(alpha: 0.1),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),
@@ -270,7 +270,7 @@ class _CashCountPageState extends State<CashCountPage> {
         leading: Container(
           margin: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(8),
           ),
           child: IconButton(
@@ -452,3 +452,4 @@ class DenominationData {
     required this.controller,
   });
 }
+

@@ -1,0 +1,7 @@
+#Mon Jun 23 14:06:24 EAT 2025
+base.1=C\:\\Users\\Benjamin Okwama\\Desktop\\CIT\\bm_security\\build\\app\\intermediates\\desugar_lib_dex\\release\\classes1000.dex
+path.1=classes1000.dex
+base.0=C\:\\Users\\Benjamin Okwama\\Desktop\\CIT\\bm_security\\build\\app\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+renamed.1=classes2.dex
+renamed.0=classes.dex
+path.0=classes.dex
