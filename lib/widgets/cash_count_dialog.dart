@@ -129,7 +129,7 @@ class _CashCountDialogState extends State<CashCountDialog> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
-                                Container(
+                                SizedBox(
                                   width: double.infinity,
                                   child: FittedBox(
                                     fit: BoxFit.scaleDown,

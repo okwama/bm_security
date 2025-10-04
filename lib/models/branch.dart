@@ -65,9 +65,6 @@ class Branch {
         updatedAt: _dateTimeFromJson(json['updated_at'] ?? DateTime.now()),
       );
     } catch (e, stackTrace) {
-      print('Error parsing Branch from JSON: $e');
-      print('Stack trace: $stackTrace');
-      print('JSON data: $json');
       rethrow;
     }
   }
@@ -92,7 +89,6 @@ class Branch {
       }
       return DateTime.now();
     } catch (e) {
-      print('Error parsing date: $e');
       return DateTime.now();
     }
   }

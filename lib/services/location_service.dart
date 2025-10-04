@@ -2,18 +2,18 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:workmanager/workmanager.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter/services.dart' show MethodChannel, PlatformException;
+import '../core/constants/app_constants.dart';
 import 'package:bm_security/utils/auth_config.dart';
 import 'package:bm_security/services/http/auth_service.dart';
 
 class LocationService {
-  static const String _baseUrl = ApiConfig.baseUrl;
+  static final String _baseUrl = ApiConfig.baseUrl;
   static const String _locationKey = 'last_sent_location';
   static const Duration _minUpdateInterval = Duration(seconds: 30);
   bool _isTracking = false;
@@ -35,6 +35,38 @@ class LocationService {
   // Add method to check if tracking specific request
   bool isTrackingRequest(String requestId) {
     return _isTracking && _currentRequestId == requestId;
+  }
+
+  // Add method to get current tracking status
+  Map<String, dynamic> getTrackingStatus() {
+    return {
+      'isTracking': _isTracking,
+      'currentRequestId': _currentRequestId,
+      'timerActive': _locationTimer?.isActive ?? false,
+      'timerTicks': _locationTimer?.tick ?? 0,
+    };
+  }
+
+  // Add method to check location permissions
+  Future<Map<String, dynamic>> checkLocationPermissions() async {
+    try {
+      final permission = await Geolocator.checkPermission();
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+      return {
+        'permission': permission.toString(),
+        'serviceEnabled': serviceEnabled,
+        'canGetLocation': permission == LocationPermission.always ||
+            permission == LocationPermission.whileInUse,
+      };
+    } catch (e) {
+      return {
+        'error': e.toString(),
+        'permission': 'unknown',
+        'serviceEnabled': false,
+        'canGetLocation': false,
+      };
+    }
   }
 
   // Add method to transfer tracking to new request
@@ -83,15 +115,49 @@ class LocationService {
 
   // Initialize the service
   Future<bool> initialize() async {
-    // Request necessary permissions
-    final status = await Permission.locationAlways.request();
-    if (!status.isGranted) {
+    debugPrint('🔧 Initializing location service...');
+
+    // Check current permission status first
+    var status = await Permission.location.status;
+    debugPrint('📱 Current location permission status: $status');
+
+    // If permanently denied, try to open app settings
+    if (status == PermissionStatus.permanentlyDenied) {
+      debugPrint('🔧 Location permanently denied, opening app settings...');
+      await openAppSettings();
+      // Wait a moment for user to potentially change settings
+      await Future.delayed(const Duration(seconds: 2));
+      status = await Permission.location.status;
+      debugPrint('📱 Location permission status after settings: $status');
+    }
+
+    // Request location permission if not granted
+    if (status != PermissionStatus.granted) {
+      debugPrint('🔧 Requesting location permission...');
+      status = await Permission.location.request();
+      debugPrint('📱 Location permission status after request: $status');
+
+      // If location permission still not granted, try locationWhenInUse
+      if (status != PermissionStatus.granted) {
+        debugPrint('🔧 Trying locationWhenInUse permission...');
+        status = await Permission.locationWhenInUse.request();
+        debugPrint('📱 LocationWhenInUse permission status: $status');
+      }
+    }
+
+    if (status != PermissionStatus.granted) {
+      debugPrint('❌ Location permission not granted: $status');
       return false;
     }
 
+    debugPrint('✅ Location permission granted');
+
     // Check if location services are enabled
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    debugPrint('📍 Location service enabled: $serviceEnabled');
+
     if (!serviceEnabled) {
+      debugPrint('❌ Location services are disabled');
       // On Android, open location settings
       if (Platform.isAndroid) {
         try {
@@ -106,6 +172,8 @@ class LocationService {
       }
       return false;
     }
+
+    debugPrint('✅ Location services are enabled');
 
     // Configure location settings
     await _configureLocationSettings();
@@ -149,6 +217,19 @@ class LocationService {
     if (myStatus != null && myStatus != 2) {
       debugPrint(
           '❌ Not starting tracking: myStatus is not 2 (current: $myStatus)');
+      return false;
+    }
+
+    // Initialize location service if not already done
+    try {
+      final initialized = await initialize();
+      if (!initialized) {
+        debugPrint('❌ Failed to initialize location service');
+        return false;
+      }
+      debugPrint('✅ Location service initialized successfully');
+    } catch (e) {
+      debugPrint('❌ Error initializing location service: $e');
       return false;
     }
 
@@ -221,6 +302,10 @@ class LocationService {
     debugPrint('🕐 Starting 30-second location timer');
 
     _locationTimer = Timer.periodic(_minUpdateInterval, (timer) async {
+      debugPrint('⏰ Location timer tick - checking tracking status...');
+      debugPrint('  - _isTracking: $_isTracking');
+      debugPrint('  - _currentRequestId: $_currentRequestId');
+
       if (!_isTracking || _currentRequestId == null) {
         debugPrint(
             '🛑 Stopping location timer - tracking stopped or no request ID');
@@ -229,7 +314,8 @@ class LocationService {
       }
 
       try {
-        debugPrint('🔄 Timer triggered - getting location update');
+        debugPrint(
+            '🔄 Timer triggered - getting location update for request: $_currentRequestId');
 
         // Get auth token
         final authtoken = await _authService.gettoken();
@@ -332,7 +418,7 @@ class LocationService {
 
   // Send location update to the server
   Future<void> _sendLocationUpdate(Position position, String authtoken) async {
-    if (_currentRequestId == null || authtoken == null) {
+    if (_currentRequestId == null) {
       debugPrint(
           '❌ Cannot send location: requestId=$_currentRequestId, token=${authtoken != null ? 'present' : 'null'}');
       return;
@@ -370,8 +456,8 @@ class LocationService {
       final response = await http.post(
         Uri.parse('$_baseUrl/locations'),
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authtoken',
+          AppConstants.contentTypeHeader: AppConstants.applicationJson,
+          AppConstants.authorizationHeader: AppConstants.getBearerToken(authtoken),
         },
         body: jsonEncode(requestBody),
       );
@@ -414,7 +500,7 @@ class LocationService {
           debugPrint('📋 Background task data:');
           debugPrint('  - RequestId: $requestId');
           debugPrint(
-              '  - Token: ${authtoken != null ? 'present (${authtoken!.length} chars)' : 'null'}');
+              '  - Token: ${authtoken != null ? 'present (${authtoken.length} chars)' : 'null'}');
 
           if (requestId == null || authtoken == null) {
             debugPrint('⚠️ Background task missing data - stopping');
@@ -461,8 +547,8 @@ class LocationService {
               .post(
                 Uri.parse('${ApiConfig.baseUrl}/locations'),
                 headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': 'Bearer $authtoken',
+                  AppConstants.contentTypeHeader: AppConstants.applicationJson,
+                  AppConstants.authorizationHeader: AppConstants.getBearerToken(authtoken),
                 },
                 body: jsonEncode(requestBody),
               )
@@ -599,8 +685,8 @@ class LocationService {
           final testResponse = await http.get(
             Uri.parse('${ApiConfig.baseUrl}/auth/profile'),
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $authToken',
+              AppConstants.contentTypeHeader: AppConstants.applicationJson,
+              AppConstants.authorizationHeader: AppConstants.getBearerToken(authToken),
             },
           ).timeout(const Duration(seconds: 10));
 
@@ -690,8 +776,8 @@ class LocationService {
       final response = await http.get(
         Uri.parse('$_baseUrl/requests/in-progress'),
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
+          AppConstants.contentTypeHeader: AppConstants.applicationJson,
+          AppConstants.authorizationHeader: AppConstants.getBearerToken(authToken),
         },
       ).timeout(const Duration(seconds: 15));
 
@@ -787,8 +873,8 @@ class LocationService {
       final response = await http.get(
         Uri.parse('$_baseUrl/requests/in-progress'),
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $authToken',
+          AppConstants.contentTypeHeader: AppConstants.applicationJson,
+          AppConstants.authorizationHeader: AppConstants.getBearerToken(authToken),
         },
       ).timeout(const Duration(seconds: 15));
 

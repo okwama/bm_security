@@ -1,42 +1,89 @@
 import 'dart:convert';
-import 'package:bm_security/models/staff.dart';
+import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'http/http_client_manager.dart';
-import 'package:bm_security/services/http/auth_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:bm_security/utils/auth_config.dart';
+import '../core/constants/app_constants.dart';
 
 class StaffService {
-  final String _baseUrl = ApiConfig.baseUrl;
-  final HttpClientManager _httpClient = HttpClientManager();
-  final AuthService _authService = AuthService();
+  static String get baseUrl => ApiConfig.baseUrl;
 
-  Future<List<Staff>> getVaultOfficers() async {
+  static Future<String?> _getAuthtoken() async {
+    final box = const FlutterSecureStorage();
+    final token = await box.read(key: 'token');
+    if (token == null) {
+      print('No authentication token found');
+    }
+    return token;
+  }
+
+  static Future<Map<String, String>> _headers([String? additionalContentType]) async {
+    final token = await _getAuthtoken();
+    return {
+      AppConstants.contentTypeHeader: additionalContentType ?? AppConstants.applicationJson,
+      'Accept': AppConstants.applicationJson,
+      if (token != null) AppConstants.authorizationHeader: AppConstants.getBearerToken(token),
+    };
+  }
+
+  static Future<Map<String, dynamic>> addStaff({
+    required String name,
+    required String phone,
+    required String employeeNumber,
+    required String idNumber,
+    required String role,
+    File? photoFile,
+  }) async {
     try {
-      final response = await _httpClient.client.get(
-        Uri.parse('$_baseUrl/staff/vault-officers'),
-        headers: await _authService.getHeaders(),
+      final token = await _getAuthtoken();
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('$baseUrl/teams/add-staff'),
       );
 
-      print('Vault officers response: ${response.body}'); // Debug print
+      // Add headers (no authentication required for add-staff)
+      request.headers.addAll({
+        'Accept': AppConstants.applicationJson,
+      });
 
-      if (response.statusCode == 200) {
-        final Map<String, dynamic> responseData = json.decode(response.body);
-        if (responseData['success'] == true && responseData['data'] != null) {
-          final List<dynamic> data = responseData['data'];
-          return data.map((json) => Staff.fromJson(json)).toList();
-        } else {
-          print('Invalid response format: $responseData');
-          throw Exception('Invalid response format from server');
-        }
+      // Add text fields
+      request.fields['name'] = name;
+      request.fields['phone'] = phone;
+      request.fields['employeeNumber'] = employeeNumber;
+      request.fields['idNumber'] = idNumber; // Send as string
+      request.fields['role'] = role;
+
+      // Add photo file if provided
+      if (photoFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath(
+            'photo',
+            photoFile.path,
+            filename: 'staff_photo_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          ),
+        );
+      }
+
+      print('Adding staff to: $baseUrl/teams/add-staff');
+      print('Staff data: name=$name, phone=$phone, employeeNumber=$employeeNumber, role=$role');
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+
+      print('Staff response status: ${response.statusCode}');
+      print('Staff response body: ${response.body}');
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        return jsonDecode(response.body);
       } else {
-        print(
-            'Vault officers API response: ${response.statusCode} - ${response.body}');
-        throw Exception(
-            'Failed to load vault officers: ${response.statusCode}');
+        final errorMessage = response.body.isNotEmpty
+            ? 'Failed to add staff: ${response.body}'
+            : 'Failed to add staff: ${response.statusCode}';
+        throw Exception(errorMessage);
       }
     } catch (e) {
-      print('Error in getVaultOfficers: $e');
-      throw Exception('Error fetching vault officers: $e');
+      print('Error adding staff: $e');
+      rethrow;
     }
   }
 }

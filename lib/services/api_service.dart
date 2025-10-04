@@ -4,7 +4,7 @@ import 'package:bm_security/utils/auth_config.dart';
 import 'package:bm_security/services/http/auth_service.dart';
 
 class ApiService {
-  static const String baseUrl = ApiConfig.baseUrl;
+  static final String baseUrl = ApiConfig.baseUrl;
   final _authService = AuthService();
 
   // Use AuthService for login instead of duplicating logic

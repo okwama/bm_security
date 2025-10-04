@@ -8,6 +8,7 @@ import '../http/http_client_manager.dart';
 import '../http/auth_service.dart';
 import '../../models/request.dart';
 import '../../models/cash_count.dart';
+import '../../core/constants/app_constants.dart';
 import '../../utils/auth_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -151,14 +152,34 @@ class RequisitionsService {
     final myStatus = request.toJson()['myStatus'] as int?;
     print('MyStatus from response: $myStatus');
 
+    // Start location tracking in background (non-blocking)
     if (myStatus == 2) {
       print('Starting location tracking for request: $requestId');
-      final trackingResult = await LocationService()
-          .startTracking(requestId.toString(), myStatus: myStatus);
-      print('Location tracking started: $trackingResult');
+      // Start tracking with proper error handling
+      try {
+        final locationService = LocationService();
+        final trackingResult = await locationService
+            .startTracking(requestId.toString(), myStatus: myStatus);
+        print('Location tracking started: $trackingResult');
+
+        // Verify tracking is active
+        if (trackingResult) {
+          print('✅ Location tracking confirmed active for request: $requestId');
+        } else {
+          print('❌ Location tracking failed to start for request: $requestId');
+        }
+      } catch (error) {
+        print('❌ Location tracking error: $error');
+        // Don't fail the pickup if location tracking fails
+      }
     } else if (myStatus == 3) {
       print('Stopping location tracking (myStatus = 3)');
-      await LocationService().stopTracking();
+      try {
+        await LocationService().stopTracking();
+        print('✅ Location tracking stopped');
+      } catch (error) {
+        print('❌ Error stopping location tracking: $error');
+      }
     } else {
       print('No location tracking action needed (myStatus = $myStatus)');
     }
@@ -177,10 +198,6 @@ class RequisitionsService {
     try {
       final dio = HttpClientManager.instance.dioClient;
       print('📡 Dio instance: ${dio != null}');
-
-      if (dio == null) {
-        throw Exception('Failed to initialize HTTP client');
-      }
 
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
@@ -205,7 +222,7 @@ class RequisitionsService {
         options: Options(
           headers: {
             ...headers,
-            'Content-Type': 'multipart/form-data',
+            AppConstants.contentTypeHeader: 'multipart/form-data',
           },
           validateStatus: (status) =>
               status! < 500, // Allow 4xx responses to be handled

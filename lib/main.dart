@@ -1,15 +1,28 @@
 import 'package:flutter/material.dart';
-import 'package:get_storage/get_storage.dart';
-import 'package:get/get.dart';
-import 'package:bm_security/pages/login/login_page.dart';
-import 'package:bm_security/pages/home/home_page.dart';
-import 'package:bm_security/pages/debug_location_page.dart';
-import 'package:bm_security/controllers/auth_controller.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+// Core
+import 'core/di/injection_container.dart' as di;
+import 'core/constants/app_constants.dart';
+import 'core/theme/app_theme.dart';
+
+// Features
+import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/auth/presentation/pages/login_page.dart';
+import 'features/home/presentation/pages/home_page.dart';
+import 'features/requests/presentation/bloc/requests_bloc.dart';
+import 'features/sos/presentation/bloc/sos_bloc.dart';
+import 'features/cash_count/presentation/bloc/cash_count_bloc.dart';
+import 'features/teams/presentation/bloc/teams_bloc.dart';
+import 'features/profile/presentation/bloc/profile_bloc.dart';
+import 'features/auth/presentation/widgets/auth_wrapper.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await GetStorage.init();
+  
+  // Initialize dependency injection
+  await di.init();
 
   runApp(const MyApp());
 }
@@ -19,74 +32,37 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'BM Security',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-        primaryColor: const Color.fromARGB(255, 12, 90, 153),
-        visualDensity: VisualDensity.adaptivePlatformDensity,
-        textTheme: GoogleFonts.quicksandTextTheme(
-          Theme.of(context).textTheme,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<AuthBloc>(
+          create: (context) => di.sl<AuthBloc>(),
         ),
-        // Apply Quicksand to specific text styles
-        textButtonTheme: TextButtonThemeData(
-          style: TextButton.styleFrom(
-            textStyle: GoogleFonts.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+        BlocProvider<RequestsBloc>(
+          create: (context) => di.sl<RequestsBloc>(),
         ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            textStyle: GoogleFonts.quicksand(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+        BlocProvider<SOSBloc>(
+          create: (context) => di.sl<SOSBloc>(),
         ),
-      ),
-      defaultTransition: Transition.fade,
-      initialRoute: '/login',
-      getPages: [
-        GetPage(
-          name: '/login',
-          page: () => const LoginPage(),
-          transition: Transition.fade,
+        BlocProvider<CashCountBloc>(
+          create: (context) => di.sl<CashCountBloc>(),
         ),
-        GetPage(
-          name: '/home',
-          page: () => const HomePage(),
-          transition: Transition.fade,
+        BlocProvider<TeamsBloc>(
+          create: (context) => di.sl<TeamsBloc>(),
         ),
-        GetPage(
-          name: '/debug-location',
-          page: () => const DebugLocationPage(),
-          transition: Transition.fade,
+        BlocProvider<ProfileBloc>(
+          create: (context) => di.sl<ProfileBloc>(),
         ),
       ],
-      initialBinding: BindingsBuilder(() {
-        Get.put(AuthController());
-      }),
+      child: MaterialApp(
+        title: AppConstants.appName,
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        home: const AuthWrapper(),
+        routes: {
+          '/login': (context) => const LoginPage(),
+          '/home': (context) => const HomePage(),
+        },
+      ),
     );
-  }
-}
-
-class AuthMiddleware extends GetMiddleware {
-  @override
-  RouteSettings? redirect(String? route) {
-    final authController = Get.find<AuthController>();
-
-    // If not authenticated and trying to access protected route
-    if (!authController.isAuthenticated && route != '/login') {
-      return const RouteSettings(name: '/login');
-    }
-
-    // If authenticated and trying to access login
-    if (authController.isAuthenticated && route == '/login') {
-      return const RouteSettings(name: '/home');
-    }
-
-    return null;
   }
 }

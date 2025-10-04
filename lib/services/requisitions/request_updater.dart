@@ -32,70 +32,56 @@ class RequestUpdater {
     final reqId = _generateRequestId('confirmPickup_$requestId');
     _httpManager.addActiveRequest(reqId);
 
+    // Prepare request body outside try block for retry access
+    final body = {
+      'cashCount': cashCount?.toJson(),
+      'imageUrl': imageUrl,
+      'sealNumber': sealNumber,
+      'latitude': latitude,
+      'longitude': longitude,
+    };
+
     try {
-      print('Starting confirmPickup for requestId: $requestId');
-      print('CashCount: ${cashCount?.toJson()}');
-      print('ImageUrl: $imageUrl');
-      print('SealNumber: $sealNumber');
-      print('Location: $latitude, $longitude');
 
       final headers = await _authService.getHeaders();
-      final body = {
-        'cashCount': cashCount?.toJson(),
-        'imageUrl': imageUrl,
-        'sealNumber': sealNumber,
-        'latitude': latitude,
-        'longitude': longitude,
-      };
-
-      print('Making pickup request with body: $body');
-      print('Headers: $headers');
-
       // Get Dio instance safely
       final dio = _httpManager.dioClient;
-      if (dio == null) {
-        throw Exception('Failed to initialize HTTP client');
-      }
 
-      try {
-        final response = await dio.post(
+      // Single attempt with optimized timeout
+      final response = await dio.post(
+        '/requests/$requestId/pickup',
+        data: body,
+        options: Options(
+          headers: headers,
+          sendTimeout: const Duration(seconds: 30),
+          receiveTimeout: const Duration(seconds: 30),
+        ),
+      );
+
+      return _parsePickupResponse(response.data, requestId);
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Single retry with token refresh
+        await _authService.refreshAccessToken();
+        final newHeaders = await _authService.getHeaders();
+        final dio = _httpManager.dioClient;
+
+        final retryResponse = await dio.post(
           '/requests/$requestId/pickup',
           data: body,
-          options: Options(headers: headers),
+          options: Options(
+            headers: newHeaders,
+            sendTimeout: const Duration(seconds: 30),
+            receiveTimeout: const Duration(seconds: 30),
+          ),
         );
 
-        print('Pickup response received: ${response.statusCode}');
-        print('Response data: ${response.data}');
-        return _parsePickupResponse(response.data, requestId);
-      } on DioException catch (e) {
-        if (e.response?.statusCode == 401) {
-          // Try to refresh token and retry
-          await _authService.refreshAccessToken();
-          final newHeaders = await _authService.getHeaders();
-
-          final retryResponse = await dio.post(
-            '/requests/$requestId/pickup',
-            data: body,
-            options: Options(headers: newHeaders),
-          );
-
-          if (retryResponse.statusCode != 200) {
-            throw Exception(
-                'Failed to confirm pickup: ${retryResponse.statusCode} - ${retryResponse.data}');
-          }
-
-          return _parsePickupResponse(retryResponse.data, requestId);
-        }
-        rethrow;
+        return _parsePickupResponse(retryResponse.data, requestId);
       }
+      rethrow;
     } catch (e, stackTrace) {
-      print('Error in confirmPickup: $e');
       if (e is DioException) {
-        print('DioException type: ${e.type}');
-        print('DioException response: ${e.response?.data}');
-        print('DioException status code: ${e.response?.statusCode}');
       }
-      print('Stack trace: $stackTrace');
       rethrow;
     } finally {
       _httpManager.removeActiveRequest(reqId);
@@ -108,7 +94,6 @@ class RequestUpdater {
     _httpManager.addActiveRequest(requestIdStr);
 
     try {
-      print('Assigning request $requestId to vault officer $vaultOfficerId');
       final headers = await _authService.getHeaders();
       final response = await _httpManager.client.post(
         Uri.parse('$_baseUrl/requests/$requestId/assign-vault-officer'),
@@ -125,7 +110,6 @@ class RequestUpdater {
       } else {
         final error =
             'Failed to assign vault officer: ${response.statusCode} - ${response.body}';
-        print(error);
         throw Exception(error);
       }
     } catch (e, stackTrace) {
@@ -147,17 +131,6 @@ class RequestUpdater {
     _httpManager.addActiveRequest(reqId);
 
     try {
-      print('=== RequestUpdater: Confirm Delivery Debug ===');
-      print('Request ID: $requestId');
-      print('Latitude: $latitude');
-      print('Longitude: $longitude');
-      print('Bank Details: $bankDetails');
-      print('Notes: $notes');
-
-      // Validate required fields
-      if (latitude == null || longitude == null) {
-        throw Exception('Location data (latitude and longitude) is required');
-      }
 
       final headers = await _authService.getHeaders();
       final body = {
@@ -166,14 +139,8 @@ class RequestUpdater {
         'longitude': longitude,
         'notes': notes,
       };
-
-      print('Making delivery confirmation request with body: $body');
-
       // Get Dio instance safely
       final dio = _httpManager.dioClient;
-      if (dio == null) {
-        throw Exception('Failed to initialize HTTP client');
-      }
 
       try {
         final response = await dio.post(
@@ -182,9 +149,7 @@ class RequestUpdater {
           options: Options(headers: headers),
         );
 
-        print(
             'Delivery confirmation response received: ${response.statusCode}');
-        print('Response data: ${response.data}');
 
         if (response.statusCode != 200) {
           throw Exception(
@@ -227,15 +192,8 @@ class RequestUpdater {
         rethrow;
       }
     } catch (e, stackTrace) {
-      print('=== RequestUpdater: Confirm Delivery Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
       if (e is DioException) {
-        print('DioException type: ${e.type}');
-        print('DioException response: ${e.response?.data}');
-        print('DioException status code: ${e.response?.statusCode}');
       }
-      print('Stack trace: $stackTrace');
       rethrow;
     } finally {
       _httpManager.removeActiveRequest(reqId);
@@ -251,18 +209,13 @@ class RequestUpdater {
     try {
       final locationService = LocationService();
       await locationService.stopTrackingForRequest(requestId);
-      print('Stopped location tracking for request: $requestId');
     } catch (e) {
-      print('Error stopping location tracking: $e');
     }
   }
 
   // Parse the completion response
   Request _parseCompletionResponse(dynamic response, bool isVaultDelivery) {
     try {
-      print('=== Parse Completion Response Debug ===');
-      print('Response type: ${response.runtimeType}');
-      print('Response data: $response');
 
       if (response is Map<String, dynamic>) {
         return Request.fromJson(response);
@@ -272,10 +225,6 @@ class RequestUpdater {
         throw Exception('Invalid response format');
       }
     } catch (e, stackTrace) {
-      print('=== Parse Completion Response Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
       throw Exception(
           'Failed to parse ${isVaultDelivery ? 'vault delivery' : 'requisition'} completion response');
     }
@@ -312,9 +261,6 @@ class RequestUpdater {
   // Parse the pickup response
   Request _parsePickupResponse(dynamic response, int requestId) {
     try {
-      print('=== Parse Pickup Response Debug ===');
-      print('Response type: ${response.runtimeType}');
-      print('Response data: $response');
 
       if (response is Map<String, dynamic>) {
         if (response.containsKey('data')) {
@@ -333,18 +279,10 @@ class RequestUpdater {
         throw Exception('Invalid response format');
       }
     } catch (e, stackTrace) {
-      print('=== Parse Pickup Response Error ===');
-      print('Error type: ${e.runtimeType}');
-      print('Error message: $e');
-      print('Stack trace: $stackTrace');
       throw Exception('Failed to parse pickup response');
     }
   }
 
   void _logError(String operation, dynamic error, StackTrace stackTrace) {
-    print('=== $operation Error ===');
-    print('Error type: ${error.runtimeType}');
-    print('Error message: $error');
-    print('Stack trace: $stackTrace');
   }
 }

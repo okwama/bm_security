@@ -59,7 +59,6 @@ class Request {
       }
       return '';
     } catch (e) {
-      print('Error getting serviceType: $e');
       return '';
     }
   }
@@ -74,7 +73,6 @@ class Request {
       }
       return 0;
     } catch (e) {
-      print('Error getting serviceTypeId: $e');
       return 0;
     }
   }
@@ -117,7 +115,6 @@ class Request {
 
   factory Request.fromJson(Map<String, dynamic> json) {
     try {
-      print('Parsing Request JSON: $json');
 
       // Safely parse ID with null check
       final id = json['id'] is int
@@ -125,7 +122,6 @@ class Request {
           : int.tryParse(json['id']?.toString() ?? '') ?? 0;
 
       if (id == 0) {
-        print('Warning: Invalid or missing ID in request JSON');
       }
 
       // Handle potential null or invalid enum values
@@ -149,7 +145,11 @@ class Request {
           ? json['serviceTypeId']
           : int.tryParse(json['serviceTypeId']?.toString() ?? '');
 
-      if (serviceTypeData is String) {
+      // If we have a serviceType object from the backend, use it directly
+      if (serviceTypeData is Map<String, dynamic>) {
+        // Backend is returning serviceType as an object, use it as is
+        serviceTypeData = serviceTypeData;
+      } else if (serviceTypeData is String) {
         // If ServiceType is a string, create a proper object with ID and name
         serviceTypeData = {
           'id': serviceTypeId ?? (serviceTypeData == 'BSS' ? 2 : 0),
@@ -174,7 +174,6 @@ class Request {
           );
         }
       } catch (e) {
-        print('Error parsing cashCount: $e');
       }
 
       // Safely parse branch
@@ -188,7 +187,6 @@ class Request {
           );
         }
       } catch (e) {
-        print('Error parsing branch: $e');
       }
 
       DeliveryCompletion? deliveryCompletion;
@@ -198,7 +196,20 @@ class Request {
               json['deliveryCompletion'] as Map<String, dynamic>);
         }
       } catch (e) {
-        print('Error parsing deliveryCompletion: $e');
+      }
+
+      // Parse myStatus with proper fallback
+      int myStatus = 0;
+      try {
+        if (json['myStatus'] != null) {
+          if (json['myStatus'] is int) {
+            myStatus = json['myStatus'];
+          } else if (json['myStatus'] is String) {
+            myStatus = int.tryParse(json['myStatus']) ?? 0;
+          }
+        }
+      } catch (e) {
+        myStatus = 0;
       }
 
       return Request(
@@ -209,6 +220,7 @@ class Request {
         pickupDate: _dateFromJson(json['pickupDate']),
         status: status,
         priority: priority,
+        myStatus: myStatus,
         createdAt: _dateFromJson(json['createdAt']),
         serviceType: serviceTypeData,
         serviceTypeId: serviceTypeId,
@@ -218,9 +230,6 @@ class Request {
         deliveryCompletion: deliveryCompletion,
       );
     } catch (e, stackTrace) {
-      print('Error parsing Request from JSON: $e');
-      print('Stack trace: $stackTrace');
-      print('JSON data: $json');
       rethrow;
     }
   }
@@ -255,7 +264,6 @@ class Request {
       }
       return null;
     } catch (e) {
-      print('Error parsing date: $e');
       return null;
     }
   }

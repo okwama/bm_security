@@ -186,7 +186,6 @@ class SuccessDialogExample extends StatelessWidget {
                   buttonText: 'View My Trips',
                   onDone: () {
                     // Navigate to trips page or perform another action
-                    print('Navigating to My Trips');
                     // Navigator.pushNamed(context, '/trips'); // Example navigation
                   },
                 );
@@ -200,7 +199,6 @@ class SuccessDialogExample extends StatelessWidget {
                   context: context,
                   title: 'Password Updated!',
                   message: 'Your password has been securely changed.',
-                  onDone: () => print('Password updated!'),
                 );
               },
               child: const Text('Show Simple Success'),
@@ -217,7 +215,6 @@ class SuccessDialogExample extends StatelessWidget {
                   successColor: Colors.deepPurple, // Custom color
                   successIcon:
                       CupertinoIcons.money_dollar_circle_fill, // Custom icon
-                  onDone: () => print('Payment success!'),
                 );
               },
               child: const Text('Show Custom Payment Success'),
@@ -228,4 +225,3 @@ class SuccessDialogExample extends StatelessWidget {
     );
   }
 }
-

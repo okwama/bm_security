@@ -2,21 +2,20 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
-import 'package:get_storage/get_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../models/request.dart';
 import '../../utils/auth_config.dart';
 import '../http/http_client_manager.dart';
 import '../http/auth_service.dart';
+import '../location_service.dart';
 
 class RequestFetcher {
   static final RequestFetcher _instance = RequestFetcher._internal();
   factory RequestFetcher() => _instance;
   RequestFetcher._internal() {
-    print('🏭 Initializing RequestFetcher');
-    print('📡 HTTP Manager instance: ${_httpManager != null}');
   }
 
-  final GetStorage _storage = GetStorage();
+  final FlutterSecureStorage _storage = const FlutterSecureStorage();
   final String _tokenKey = 'token';
   final HttpClientManager _httpManager = HttpClientManager.instance;
   final AuthService _authService = AuthService();
@@ -32,7 +31,6 @@ class RequestFetcher {
 
   Future<Request> getRequestDetails(int requestId) async {
     try {
-      print('Fetching request details for ID: $requestId');
       final headers = await _authService.getHeaders();
 
       final response = await _httpManager.dioClient.get(
@@ -53,11 +51,8 @@ class RequestFetcher {
 
   Future<List<Request>> getPendingRequests() async {
     try {
-      print('Fetching pending requests');
       final headers = await _authService.getHeaders();
       final userData = _authService.userData;
-      print('👤 Current user role: ${userData?['role']}');
-      print('👤 Current user ID: ${userData?['id']}');
 
       final response = await _httpManager.dioClient.get(
         '/requests/pending',
@@ -94,11 +89,8 @@ class RequestFetcher {
 
   Future<List<Request>> getInProgressRequests() async {
     try {
-      print('Fetching in-progress requests');
       final headers = await _authService.getHeaders();
       final userData = _authService.userData;
-      print('👤 Current user role: ${userData?['role']}');
-      print('👤 Current user ID: ${userData?['id']}');
 
       final response = await _httpManager.dioClient.get(
         '/requests/in-progress',
@@ -110,7 +102,15 @@ class RequestFetcher {
 
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        return data.map((json) => Request.fromJson(json)).toList();
+        final requests = data.map((json) => Request.fromJson(json)).toList();
+
+        for (final request in requests) {
+        }
+
+        // Auto-start location tracking for in-progress requests
+        await _autoStartLocationTracking(requests);
+
+        return requests;
       } else if (response.statusCode == 403) {
         throw Exception(
             'You do not have permission to view in-progress requests');
@@ -134,9 +134,46 @@ class RequestFetcher {
     }
   }
 
+  Future<void> _autoStartLocationTracking(List<Request> requests) async {
+        '🔍 _autoStartLocationTracking called with ${requests.length} requests');
+
+    if (requests.isEmpty) {
+      return;
+    }
+
+    try {
+      final locationService = LocationService();
+
+      for (final request in requests) {
+            '🔍 Checking request ${request.id}: myStatus = ${request.myStatus}');
+
+        // Check if this request needs location tracking (myStatus = 2)
+        if (request.myStatus == 2) {
+              '🎯 Auto-starting location tracking for request: ${request.id}');
+
+          // Check if already tracking this request
+          if (!locationService.isTrackingRequest(request.id.toString())) {
+            final trackingResult = await locationService.startTracking(
+              request.id.toString(),
+              myStatus: 2,
+            );
+
+            if (trackingResult) {
+            } else {
+                  '❌ Failed to start location tracking for request: ${request.id}');
+            }
+          } else {
+          }
+        } else {
+              '⏭️ Skipping request ${request.id}: myStatus = ${request.myStatus} (not 2)');
+        }
+      }
+    } catch (e) {
+    }
+  }
+
   Future<List<Request>> getCompletedRequests() async {
     try {
-      print('Fetching completed requests');
       final headers = await _authService.getHeaders();
 
       final response = await _httpManager.dioClient.get(
@@ -170,97 +207,73 @@ class RequestFetcher {
   }
 
   void _logError(String operation, dynamic error, StackTrace? stackTrace) {
-    print('Error in $operation: $error');
     if (stackTrace != null) {
-      print('Stack trace: $stackTrace');
     }
   }
 
   Future<void> startPolling() async {
-    print('🔄 Starting request polling...');
     if (_isPolling) {
-      print('⚠️ Polling already in progress');
       return;
     }
 
     _isPolling = true;
-    print('📡 Initial fetch...');
     await _fetchRequests();
 
-    print('⏰ Setting up polling timer...');
     _pollingTimer = Timer.periodic(_pollingInterval, (timer) async {
-      print('⏰ Polling timer triggered');
       await _fetchRequests();
     });
   }
 
   Future<void> _fetchRequests() async {
-    print('📥 Fetching requests...');
 
     // Check if we're trying to fetch too frequently
     if (_lastFetchTime != null) {
       final timeSinceLastFetch = DateTime.now().difference(_lastFetchTime!);
       if (timeSinceLastFetch < _minFetchInterval) {
-        print(
             '⏰ Fetch too soon, skipping. Time since last fetch: $timeSinceLastFetch');
         return;
       }
     }
 
     try {
-      print('🔑 Getting headers...');
       final headers = await _authService.getHeaders();
 
-      print('📡 Making API request...');
       final response = await _httpManager.dioClient.get(
         '/requests/pending',
         options: Options(headers: headers),
       );
 
-      print('📦 Processing response...');
       if (response.statusCode == 200) {
         final List<dynamic> data = response.data;
-        print('📊 Received ${data.length} requests');
 
         _cachedRequests = data.map((json) => Request.fromJson(json)).toList();
         _lastFetchTime = DateTime.now();
 
-        print('📤 Emitting ${_cachedRequests.length} requests to stream');
         _requestController.add(_cachedRequests);
       } else if (response.statusCode == 401) {
-        print('🔒 Unauthorized access');
         throw Exception('Session expired. Please login again.');
       } else {
-        print('⚠️ Invalid response format: ${response.statusCode}');
         throw Exception('Failed to fetch requests: ${response.statusCode}');
       }
     } catch (e) {
-      print('❌ Error fetching requests: $e');
       if (e.toString().contains('SocketException')) {
-        print('🌐 Network error detected');
         throw Exception('Network error. Please check your connection.');
       }
-      print('❌ Unexpected error: $e');
       throw Exception('Failed to fetch requests: ${e.toString()}');
     }
   }
 
   Future<void> stopPolling() async {
-    print('🛑 Stopping request polling...');
     _pollingTimer?.cancel();
     _isPolling = false;
-    print('✅ Polling stopped');
   }
 
   void dispose() {
-    print('🗑️ Disposing RequestFetcher...');
     stopPolling();
     _requestController.close();
-    print('✅ RequestFetcher disposed');
   }
 
   List<Request> getCachedRequests() {
-    print('📋 Getting cached requests: ${_cachedRequests.length} items');
     return _cachedRequests;
   }
 }

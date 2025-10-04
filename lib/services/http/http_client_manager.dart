@@ -1,8 +1,13 @@
 // File: services/http/http_client_manager.dart
+// Unified HTTP client manager for all API communications
+// Handles authentication, token refresh, and error management
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import '../../utils/auth_config.dart';
+import '../../utils/navigation.dart';
+import '../../core/constants/app_constants.dart';
 import 'auth_service.dart';
 
 class HttpClientManager {
@@ -31,12 +36,12 @@ class HttpClientManager {
     try {
       _dio = Dio(BaseOptions(
         baseUrl: ApiConfig.baseUrl,
-        connectTimeout: const Duration(seconds: 30),
-        receiveTimeout: const Duration(seconds: 30),
-        sendTimeout: const Duration(seconds: 30),
+        connectTimeout: const Duration(seconds: 10), // Reduced from 30s
+        receiveTimeout: const Duration(seconds: 15), // Reduced from 30s
+        sendTimeout: const Duration(seconds: 10), // Reduced from 30s
         headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
+          AppConstants.contentTypeHeader: AppConstants.applicationJson,
+          'Accept': AppConstants.applicationJson,
         },
       ));
 
@@ -52,7 +57,7 @@ class HttpClientManager {
             final token = await _authService.gettoken();
             if (token != null) {
               print('🔑 Adding token to request');
-              options.headers['Authorization'] = 'Bearer $token';
+              options.headers[AppConstants.authorizationHeader] = AppConstants.getBearerToken(token);
             } else {
               print('⚠️ No token available for request');
             }
@@ -69,17 +74,37 @@ class HttpClientManager {
           print('Error message: ${e.message}');
           print('Response status: ${e.response?.statusCode}');
 
-          // Only clear token for actual 401 responses
+          // Handle 401 responses with silent refresh
           if (e.response?.statusCode == 401) {
-            print('🔒 Unauthorized access detected');
-            await _authService.cleartoken();
-            return handler.reject(
-              DioException(
-                requestOptions: e.requestOptions,
-                error: 'Session expired. Please login again.',
-                type: DioExceptionType.badResponse,
-              ),
-            );
+            print(
+                '🔒 Unauthorized access detected - attempting silent refresh');
+
+            // Try silent token refresh first
+            final refreshSuccess = await _authService.silentRefreshToken();
+
+            if (refreshSuccess) {
+              print('✅ Silent refresh successful - retrying original request');
+              // Retry the original request with new token
+              final newToken = await _authService.accessToken;
+              if (newToken != null) {
+                e.requestOptions.headers[AppConstants.authorizationHeader] = AppConstants.getBearerToken(newToken);
+                return handler.resolve(await _dio!.fetch(e.requestOptions));
+              }
+            } else {
+              print('❌ Silent refresh failed - clearing token and notifying user');
+              await _authService.cleartoken();
+              
+              // Show user-friendly message
+              _showSessionExpiredDialog();
+              
+              return handler.reject(
+                DioException(
+                  requestOptions: e.requestOptions,
+                  error: 'Session expired. Please login again.',
+                  type: DioExceptionType.badResponse,
+                ),
+              );
+            }
           }
 
           // Handle network errors without clearing token
@@ -162,5 +187,35 @@ class HttpClientManager {
     _client?.close();
     _client = null;
     _isDisposed = true;
+  }
+
+  void _showSessionExpiredDialog() {
+    final context = NavigationService.navigatorKey.currentContext;
+    if (context != null) {
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text('Session Expired'),
+            content: const Text(
+              'Your session has expired. Please log in again to continue.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).pushNamedAndRemoveUntil(
+                    '/login',
+                    (route) => false,
+                  );
+                },
+                child: const Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 }

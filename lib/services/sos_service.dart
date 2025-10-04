@@ -1,28 +1,29 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:get_storage/get_storage.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:bm_security/utils/auth_config.dart';
 import 'package:bm_security/services/api_service.dart';
+import '../core/constants/app_constants.dart';
 
 class SosService {
-  static const String baseUrl = '${ApiConfig.baseUrl}/api';
+  static String get baseUrl => ApiConfig.baseUrl;
 
-  static String? _getAuthtoken() {
-    final box = GetStorage();
-    final token = box.read('token');
+  static Future<String?> _getAuthtoken() async {
+    final box = const FlutterSecureStorage();
+    final token = await box.read(key: 'token');
     if (token == null) {
       print('No authentication token found');
     }
     return token;
   }
 
-  static Map<String, String> _headers([String? additionalContentType]) {
-    final token = _getAuthtoken();
+  static Future<Map<String, String>> _headers([String? additionalContentType]) async {
+    final token = await _getAuthtoken();
     return {
-      'Content-Type': additionalContentType ?? 'application/json',
-      'Accept': 'application/json',
-      if (token != null) 'Authorization': 'Bearer $token',
+      AppConstants.contentTypeHeader: additionalContentType ?? AppConstants.applicationJson,
+      'Accept': AppConstants.applicationJson,
+      if (token != null) AppConstants.authorizationHeader: AppConstants.getBearerToken(token),
     };
   }
 
